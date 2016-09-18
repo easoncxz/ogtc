@@ -4,67 +4,79 @@ import Html.App as App
 
 import Views as V
 import Utils exposing (splitAt)
+import Messages exposing (Msg(..))
 import Models exposing
-    ( Id(..)
-    , TaskStatus(..)
-    , ZTask
-    , Model
-    , Msg(..)
-    )
+  ( Id(..)
+  , TaskStatus(..)
+  , ZTask
+  , ZTaskList
+  , Model
+  )
 
 -- Main
 
 main : Program Never
 main = App.program
-    { init          = init
-    , update        = update
-    , subscriptions = subscriptions
-    , view          = view
-    }
+  { init          = init
+  , update        = update
+  , subscriptions = subscriptions
+  , view          = view
+  }
 
 -- Model
 
 model : Model
 model =
-    { tasks             = []
-    , newTaskTitleField = "New task"
+  { taskList =
+    { name = "my task list"
+    , tasks = []
     }
+  , taskPrompt = "New task"
+  }
 
 init : (Model, Cmd Msg)
 init = (model , Cmd.none)
 
 -- Update
 
+addDefaultTask : ZTaskList -> String -> ZTaskList
+addDefaultTask list title =
+  let newTask = { title = title , status = NeedsAction }
+  in { list | tasks = list.tasks ++ [newTask] }
+
+deleteTaskAt : ZTaskList -> Int -> ZTaskList
+deleteTaskAt list n =
+  if n < 0 then
+    list
+  else
+    { list
+    | tasks =
+      let
+          (front, back) = splitAt n list.tasks
+      in
+          case List.tail back of
+            Just bs ->
+              front ++ bs
+            Nothing ->
+              front
+    }
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    let model' =
-        case msg of
-            NoOp ->
-                model
-            UpdateNewTaskTitleField t ->
-                { model | newTaskTitleField = t }
-            SubmitNewTask ->
-                { model
-                | newTaskTitleField = ""
-                , tasks = model.tasks ++ [
-                    { title = model.newTaskTitleField
-                    , status = NeedsAction
-                    }]
-                }
-            DeleteTaskAt n ->
-                if n < 0 then
-                    model
-                else
-                    { model
-                    | tasks =
-                        let (front, back) = splitAt n model.tasks
-                        in case List.tail back of
-                            Just bs ->
-                                front ++ bs
-                            Nothing ->
-                                front
-                    }
-    in (model', Cmd.none)
+  let model' =
+    case msg of
+      NoOp ->
+        model
+      UpdateNewTaskTitleField t ->
+        { model | taskPrompt = t }
+      SubmitNewTask ->
+        { model
+        | taskPrompt = ""
+        , taskList = addDefaultTask model.taskList model.taskPrompt
+        }
+      DeleteTaskAt n ->
+        { model | taskList = deleteTaskAt model.taskList n }
+  in (model', Cmd.none)
 
 -- Subscriptions
 
@@ -75,9 +87,9 @@ subscriptions _ = Sub.none
 
 view : Model -> H.Html Msg
 view model =
-    H.div []
-        [ H.h1 [] [ H.text "OGTC client" ]
-        , V.showTaskList model.tasks
-        , V.newTaskPrompt model.newTaskTitleField
-        ]
+  H.div []
+    [ H.h1 [] [ H.text "OGTC client" ]
+    , V.showTaskList model.taskList.tasks
+    , V.newTaskPrompt model.taskPrompt
+    ]
 

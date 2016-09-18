@@ -6,14 +6,8 @@ import Html.Attributes as HA
 import Html.Events as HE
 import String
 
-import Models exposing
-    ( ZTask
-    , Msg
-        ( UpdateNewTaskTitleField
-        , SubmitNewTask
-        , DeleteTaskAt
-        )
-    )
+import Models exposing (ZTask)
+import Messages exposing (Msg(..))
 
 showTask : ZTask -> H.Html Msg
 showTask t = H.p [] [ H.text t.title ]

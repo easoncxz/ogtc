@@ -2,21 +2,31 @@
 module Models exposing (..)
 
 type alias Model =
-  { taskList   : ZTaskList
+  { taskLists  : List ZTaskList
+  , currentTaskList : Maybe ZTaskListId
+  , taskListPrompt : String
   , taskPrompt : String
+  , nextIds : NextIds
   }
 
+type ZTaskId = ZTaskId Int
 type alias ZTask =
   { title  : String
   , status : TaskStatus
+  , id     : ZTaskId
   }
 
+type ZTaskListId = ZTaskListId Int
 type alias ZTaskList =
-  { name : String
+  { name  : String
   , tasks : List ZTask
+  , id    : ZTaskListId
   }
 
-type Id a = Id String
+type alias NextIds =
+  { task : Int
+  , taskList : Int
+  }
 
 type TaskStatus
   = NeedsAction

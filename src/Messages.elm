@@ -1,10 +1,15 @@
 
 module Messages exposing (..)
 
-type Msg
-    = NoOp
-    | UpdateNewTaskTitleField String
-    | SubmitNewTask
-    | DeleteTaskAt Int
+import Models exposing (..)
 
+type Msg
+  = NoOp
+  | CreateTaskList String
+  | DeleteTaskList ZTaskListId
+  | SwitchToTaskList ZTaskListId
+  | CreateTask String
+  | DeleteTask ZTaskId
+  | UpdateTaskListPrompt String
+  | UpdateTaskPrompt String
 

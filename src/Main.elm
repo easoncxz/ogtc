@@ -1,8 +1,10 @@
 
+import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.App as App
+import Task
 
 import Messages exposing (Msg(..))
 import Models exposing
@@ -72,88 +74,105 @@ mapWhere predicate f xs =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  let
-      model' =
-          case msg of
-              NoOp ->
-                  model
-              CreateTaskList name ->
-                  let
-                      (id, nextIds) = drawTaskListId model.nextIds
-                      taskList =
-                          { name = name
-                          , tasks = []
-                          , id = id
-                          }
-                  in
-                      { model
-                      | taskLists = taskList :: model.taskLists
-                      , currentTaskList = Just id
-                      , taskListPrompt = ""
-                      , nextIds = nextIds
-                      }
-              DeleteTaskList taskListId ->
-                  let
-                      remainders =
-                          List.filter
-                              (\tl -> tl.id /= taskListId)
-                              model.taskLists
-                      removingCurrent = Just taskListId == model.currentTaskList
-                  in
-                      { model
-                      | taskLists = remainders
-                      , currentTaskList =
-                          if removingCurrent then
-                              Maybe.map
+    case msg of
+        NoOp ->
+            (model, Cmd.none)
+        CreateTaskList name ->
+            let
+                (id, nextIds) = drawTaskListId model.nextIds
+                taskList =
+                    { name = name
+                    , tasks = []
+                    , id = id
+                    }
+                m' =
+                    { model
+                    | taskLists = taskList :: model.taskLists
+                    , currentTaskList = Just id
+                    , taskListPrompt = ""
+                    , nextIds = nextIds
+                    }
+                focus =
+                    Task.perform
+                        (always NoOp)
+                        (always NoOp)
+                        (Dom.focus elemIds.taskListInputElem)
+            in (m', focus)
+        DeleteTaskList taskListId ->
+            let
+                remainders =
+                    List.filter
+                        (\tl -> tl.id /= taskListId)
+                        model.taskLists
+                removingCurrent = Just taskListId == model.currentTaskList
+                m' =
+                    { model
+                    | taskLists = remainders
+                    , currentTaskList =
+                        if removingCurrent then
+                            Maybe.map
                                 (\tl -> tl.id)
                                 (List.head remainders)
-                          else
-                              model.currentTaskList
-                      }
-              SwitchToTaskList selection ->
-                  { model
-                  | currentTaskList =
-                      let
-                          matched = List.head <| List.filter
-                              (\tl -> tl.id == selection)
-                              model.taskLists
-                      in
-                          Maybe.map (\tl -> tl.id) matched
-                  }
-              CreateTask name ->
-                  let
-                      (id, nextIds) = drawTaskId model.nextIds
-                      task =
-                          { title = name
-                          , status = NeedsAction
-                          , id = id
-                          }
-                  in
-                      { model
-                      | taskLists =
-                          mapWhere
+                        else
+                            model.currentTaskList
+                    }
+            in (m', Cmd.none)
+        SwitchToTaskList selection ->
+            let
+                m' =
+                    { model
+                    | currentTaskList =
+                        let
+                            matched = List.head <|
+                                List.filter
+                                    (\tl -> tl.id == selection)
+                                    model.taskLists
+                        in
+                            Maybe.map (\tl -> tl.id) matched
+                    }
+            in (m', Cmd.none)
+        CreateTask name ->
+            let
+                (id, nextIds) = drawTaskId model.nextIds
+                task =
+                    { title = name
+                    , status = NeedsAction
+                    , id = id
+                    }
+                m' =
+                    { model
+                    | taskLists =
+                        mapWhere
                             (\tl -> Just tl.id == model.currentTaskList)
                             (\tl -> { tl | tasks = task :: tl.tasks })
                             model.taskLists
-                      , nextIds = nextIds
-                      , taskPrompt = ""
-                      }
-              DeleteTask selection ->
-                  { model
-                  | taskLists =
-                      mapWhere
-                          (\tl -> Just tl.id == model.currentTaskList)
-                          (\tl -> { tl | tasks =
-                              List.filter
-                                  (\t -> t.id /= selection)
-                                  tl.tasks })
-                          model.taskLists
-                  }
-              UpdateTaskListPrompt p ->
-                  { model | taskListPrompt = p }
-              UpdateTaskPrompt p ->
-                  { model | taskPrompt = p }
-  in (model', Cmd.none)
+                    , nextIds = nextIds
+                    , taskPrompt = ""
+                    }
+                focus = Task.perform
+                    (always NoOp)
+                    (always NoOp)
+                    (Dom.focus elemIds.taskInputElem)
+            in (m', focus)
+        DeleteTask selection ->
+            let
+                m' =
+                    { model
+                    | taskLists =
+                        mapWhere
+                            (\tl -> Just tl.id == model.currentTaskList)
+                            (\tl -> { tl | tasks =
+                                List.filter
+                                    (\t -> t.id /= selection)
+                                    tl.tasks })
+                                    model.taskLists
+                    }
+            in
+                (m', Cmd.none)
+        UpdateTaskListPrompt p ->
+            ({ model | taskListPrompt = p }, Cmd.none)
+        UpdateTaskPrompt p ->
+            ({ model | taskPrompt = p }, Cmd.none)
 
 -- Subscriptions
 
@@ -161,6 +180,11 @@ subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 -- View
+
+elemIds =
+    { taskListInputElem = "task-list-input"
+    , taskInputElem = "task-input"
+    }
 
 view : Model -> H.Html Msg
 view model =
@@ -185,6 +209,7 @@ view model =
     , H.input
         [ HE.onInput UpdateTaskListPrompt
         , HA.value model.taskListPrompt
+        , HA.id elemIds.taskListInputElem
         ]
         []
     , H.input
@@ -218,12 +243,13 @@ view model =
                     , H.input
                         [ HE.onInput UpdateTaskPrompt
                         , HA.value model.taskPrompt
+                        , HA.id elemIds.taskInputElem
                         ]
                         []
                     , H.input
                         [ HA.type' "button"
                         , HA.value "new task"
-                        , HE.onClick (CreateTask (model.taskPrompt))
+                        , HE.onClick <| CreateTask (model.taskPrompt)
                         ]
                         []
                     ]

@@ -176,6 +176,8 @@ view model =
                         , HA.href "#"
                         ]
                         [ H.text tl.name ]
+                    , H.button [ HE.onClick (DeleteTaskList tl.id) ]
+                        [ H.text "delete" ]
                     ])
             model.taskLists)
     , H.span []
@@ -189,6 +191,7 @@ view model =
         , HE.onClick (CreateTaskList (model.taskListPrompt))
         ]
         []
+    , H.h2 [] [ H.text "Tasks in this list:" ]
     , let
         currentTaskList = List.head <|
             List.filter
@@ -198,10 +201,15 @@ view model =
           case currentTaskList of
               Just tl ->
                   H.div []
-                    [ H.h2 [] [ H.text (tl.name ++ ":") ]
+                    [ H.h3 [] [ H.text (tl.name ++ ":") ]
                     , H.ul []
                         (List.map
-                            (\t -> H.li [] [ H.text t.title ])
+                            (\t -> H.li []
+                                [ H.span [] [ H.text t.title ]
+                                , H.button
+                                    [ HE.onClick (DeleteTask t.id) ]
+                                    [ H.text "delete" ]
+                                ])
                             tl.tasks)
                     , H.span []
                         [ H.text "New task:" ]

@@ -31,8 +31,8 @@ model : Model
 model =
   { taskLists = []
   , currentTaskList = Nothing
-  , taskListPrompt = "New task list..."
-  , taskPrompt = "New task..."
+  , taskListPrompt = "(task list name here...)"
+  , taskPrompt = "(task name here...)"
   , nextIds =
       { task = 0
       , taskList = 0
@@ -90,7 +90,6 @@ update msg model =
                       | taskLists = taskList :: model.taskLists
                       , currentTaskList = Just id
                       , taskListPrompt = ""
-                      , taskPrompt = ""
                       , nextIds = nextIds
                       }
               DeleteTaskList taskListId ->
@@ -137,6 +136,7 @@ update msg model =
                             (\tl -> { tl | tasks = task :: tl.tasks })
                             model.taskLists
                       , nextIds = nextIds
+                      , taskPrompt = ""
                       }
               DeleteTask selection ->
                   { model
@@ -183,7 +183,9 @@ view model =
     , H.span []
         [ H.text "New task list:" ]
     , H.input
-        [ HE.onInput UpdateTaskListPrompt ]
+        [ HE.onInput UpdateTaskListPrompt
+        , HA.value model.taskListPrompt
+        ]
         []
     , H.input
         [ HA.type' "button"
@@ -214,7 +216,9 @@ view model =
                     , H.span []
                         [ H.text "New task:" ]
                     , H.input
-                        [ HE.onInput UpdateTaskPrompt ]
+                        [ HE.onInput UpdateTaskPrompt
+                        , HA.value model.taskPrompt
+                        ]
                         []
                     , H.input
                         [ HA.type' "button"

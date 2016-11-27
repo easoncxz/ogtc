@@ -16,6 +16,7 @@ import Models exposing
   , NextIds
   , Model
   )
+import ZongGoogleOAuthParsers exposing (parseFragment)
 
 main : Program Never Model Msg
 main = Nav.program

@@ -6,6 +6,8 @@ import String
 
 import Palindromes as P
 
+import UrlParserStudyTests
+
 all : Test
 all =
     describe "A Test Suite"
@@ -21,4 +23,5 @@ all =
         , test "My palindrome SUT" <|
             \() ->
                 Expect.equal False (P.isPalindrome "123")
+        , UrlParserStudyTests.all
         ]

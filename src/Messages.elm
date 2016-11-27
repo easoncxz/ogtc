@@ -1,6 +1,8 @@
 
 module Messages exposing (..)
 
+import Navigation as Nav
+
 import Models exposing (..)
 
 type Msg
@@ -14,3 +16,4 @@ type Msg
   | UpdateTaskPrompt String
   | UpdateOAuthKey String
   | UpdateOAuthSecret String
+  | UpdateLocation Nav.Location

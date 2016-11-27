@@ -3,6 +3,7 @@ import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
+import Navigation as Nav
 import Task
 
 import Messages exposing (Msg(..))
@@ -16,34 +17,32 @@ import Models exposing
   , Model
   )
 
--- Main
-
 main : Program Never Model Msg
-main = H.program
+main = Nav.program
+  onLocationChange
   { init          = init
   , update        = update
   , subscriptions = subscriptions
   , view          = view
   }
 
--- Model
-
-model : Model
-model =
-  { taskLists = []
-  , currentTaskList = Nothing
-  , taskListPrompt = "(task list name here...)"
-  , taskPrompt = "(task name here...)"
-  , nextIds =
-      { task = 0
-      , taskList = 0
-      }
-  , oauthKey = "key-ish"
-  , oauthSecret = "not-so-secret"
-  }
-
-init : (Model, Cmd Msg)
-init = (model, Cmd.none)
+init : Nav.Location -> (Model, Cmd Msg)
+init loc =
+  let
+    model = { taskLists = []
+    , currentTaskList = Nothing
+    , taskListPrompt = "(task list name here...)"
+    , taskPrompt = "(task name here...)"
+    , nextIds =
+        { task = 0
+        , taskList = 0
+        }
+    , oauthKey = "key-ish"
+    , oauthSecret = "not-so-secret"
+    , location = loc
+    }
+  in
+      (model, Cmd.none)
 
 -- Draw the next task ID from the ID keeper
 drawTaskId : NextIds -> (ZTaskId, NextIds)
@@ -176,13 +175,14 @@ update msg model =
             ({ model | oauthKey = k }, Cmd.none)
         UpdateOAuthSecret s ->
             ({ model | oauthSecret = s }, Cmd.none)
+        UpdateLocation loc ->
+            ({ model | location = loc }, Cmd.none)
 
--- Subscriptions
+onLocationChange : Nav.Location -> Msg
+onLocationChange = UpdateLocation
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
-
--- View
 
 elemIds =
     { taskListInputElem = "task-list-input"
@@ -211,6 +211,13 @@ view model =
                 , HA.value model.oauthSecret
                 ] []
             ]
+        ]
+    , H.div []
+        [ H.h4 [] [ H.text "Location info" ]
+        , H.p []
+          [ H.b [] [ H.text "Location.hash: " ]
+          , H.text model.location.hash
+          ]
         ]
     , H.h2 [] [ H.text "Task lists:" ]
     , H.ul []

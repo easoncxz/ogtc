@@ -1,6 +1,8 @@
 
 module Models exposing (..)
 
+import Navigation as Nav
+
 type alias Model =
   { taskLists  : List ZTaskList
   , currentTaskList : Maybe ZTaskListId
@@ -9,6 +11,7 @@ type alias Model =
   , nextIds : NextIds
   , oauthKey : String
   , oauthSecret : String
+  , location : Nav.Location
   }
 
 type ZTaskId = ZTaskId Int

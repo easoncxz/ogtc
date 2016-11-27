@@ -17,3 +17,4 @@ type Msg
   | UpdateOAuthKey String
   | UpdateOAuthSecret String
   | UpdateLocation Nav.Location
+  | UpdateNextUrl String

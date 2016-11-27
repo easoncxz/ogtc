@@ -40,6 +40,7 @@ init loc =
     , oauthKey = "key-ish"
     , oauthSecret = "not-so-secret"
     , location = loc
+    , nextUrl = "#default-next-url"
     }
   in
       (model, Cmd.none)
@@ -177,6 +178,8 @@ update msg model =
             ({ model | oauthSecret = s }, Cmd.none)
         UpdateLocation loc ->
             ({ model | location = loc }, Cmd.none)
+        UpdateNextUrl n ->
+            ({ model | nextUrl = n }, Cmd.none)
 
 onLocationChange : Nav.Location -> Msg
 onLocationChange = UpdateLocation
@@ -218,6 +221,18 @@ view model =
           [ H.b [] [ H.text "Location.hash: " ]
           , H.text model.location.hash
           ]
+        , H.div []
+            [ H.p []
+                [ H.text "Navigate to: "
+                , H.input
+                    [ HE.onInput UpdateNextUrl
+                    , HA.value model.nextUrl
+                    ] []
+                ]
+            , H.a
+                [ HA.href model.nextUrl ]
+                [ H.text model.nextUrl ]
+            ]
         ]
     , H.h2 [] [ H.text "Task lists:" ]
     , H.ul []

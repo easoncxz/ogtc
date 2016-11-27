@@ -13,6 +13,7 @@ type alias Model =
   , oauthSecret : String
   , location : Nav.Location
   , nextUrl : String
+  , accessToken : Maybe String
   }
 
 type ZTaskId = ZTaskId Int

@@ -3,9 +3,6 @@ module ZongGoogleOAuthParsers exposing (..)
 
 import String
 
-snd : (a, b) -> b
-snd (a, b) = b
-
 maybeToPair : List a -> Maybe (a, a)
 maybeToPair xs =
   case xs of
@@ -14,21 +11,44 @@ maybeToPair xs =
     _ ->
       Nothing
 
-checkKeyIs : a -> (a, b) -> Maybe (a, b)
-checkKeyIs good (a, b) =
-  if a == good then
-    Just (a, b)
-  else
-    Nothing
+isSomething : Maybe a -> Bool
+isSomething m =
+  case m of
+    Nothing ->
+      False
+    _ ->
+      True
+
+keyIs : String -> Maybe (String, a) -> Bool
+keyIs good p =
+  case p of
+    Nothing ->
+      False
+    Just (k, _) ->
+      k == good
 
 type alias Fragment = String
 type alias AccessToken = String
 
 parseFragment : Fragment -> Maybe AccessToken
 parseFragment fragment =
-  String.uncons fragment
-    |> Maybe.andThen (Just << snd)
-    |> Maybe.andThen (Just << String.split "=")
-    |> Maybe.andThen maybeToPair
-    |> Maybe.andThen (checkKeyIs "access_token")
-    |> Maybe.andThen (Just << snd)
+  case String.uncons fragment of
+    Nothing ->
+      Nothing
+    Just (_, allParams) ->
+      let
+          keyValueStrings = String.split "&" allParams
+          keyValueLists = List.map (String.split "=") keyValueStrings
+          keyValueMaybePairs = List.map maybeToPair keyValueLists
+          maybeFound = keyValueMaybePairs
+            |> List.filter isSomething
+            |> List.filter (keyIs "access_token")
+            |> List.head
+      in case maybeFound of
+        Nothing ->
+          Nothing
+        Just Nothing ->
+          Nothing
+        Just (Just (k, token)) ->
+          Just token
+

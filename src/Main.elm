@@ -42,6 +42,7 @@ init loc =
     , oauthSecret = "not-so-secret"
     , location = loc
     , nextUrl = "#default-next-url"
+    , accessToken = parseFragment loc.hash
     }
   in
       (model, Cmd.none)
@@ -193,6 +194,17 @@ elemIds =
     , taskInputElem = "task-input"
     }
 
+makeAuthorizeUrl : String -> String -> String -> String
+makeAuthorizeUrl oauthKey url state =
+    ("https://accounts.google.com/o/oauth2/v2/auth"
+    ++ "?response_type=" ++ "token"
+    ++ "&client_id="     ++ oauthKey
+    ++ "&redirect_uri="  ++ url
+    ++ "&scope="         ++ "https://www.googleapis.com/auth/tasks"
+    ++ "&state="         ++ state
+    ++ "&prompt="        ++ "consent"
+    )
+
 view : Model -> H.Html Msg
 view model =
   H.div []
@@ -215,6 +227,15 @@ view model =
                 , HA.value model.oauthSecret
                 ] []
             ]
+        , H.p []
+            [ H.b [] [ H.text "Access token: " ]
+            , H.code []
+                [ H.text <|
+                    Maybe.withDefault
+                        "(nothing)"
+                        model.accessToken
+                ]
+            ]
         ]
     , H.div []
         [ H.h4 [] [ H.text "Location info" ]
@@ -222,18 +243,20 @@ view model =
           [ H.b [] [ H.text "Location.hash: " ]
           , H.text model.location.hash
           ]
-        , H.div []
-            [ H.p []
-                [ H.text "Navigate to: "
-                , H.input
-                    [ HE.onInput UpdateNextUrl
-                    , HA.value model.nextUrl
-                    ] []
+        , H.div [] <|
+            let
+                authUrl = makeAuthorizeUrl
+                    model.oauthKey
+                    (model.location.origin ++ "/src/Main.elm")
+                    -- `origin` is "http://localhost:8000"
+                    -- for "http://localhost:8000/src/Main.elm#access_token=abc"
+                    model.taskListPrompt -- Why not.
+            in
+                [ H.text "Authorize access to Google Tasks: "
+                , H.a
+                    [ HA.href authUrl ]
+                    [ H.text authUrl ]
                 ]
-            , H.a
-                [ HA.href model.nextUrl ]
-                [ H.text model.nextUrl ]
-            ]
         ]
     , H.h2 [] [ H.text "Task lists:" ]
     , H.ul []

@@ -1,4 +1,4 @@
-
+-- ya29.Ci-jAw0S695T4MgzqJ7L0gMT0NLU0Qjg6pmnoI_UXGmwKJNstWMmOKDv28ZsH3-4oQ
 module UrlParserStudyTests exposing (all)
 
 import Test exposing (..)
@@ -10,8 +10,6 @@ import Navigation exposing (Location)
 
 import ZongGoogleOAuthParsers exposing
     ( parseFragment
-    , maybeToPair
-    , checkKeyIs
     )
 
 importantSample =
@@ -85,29 +83,7 @@ all = describe "many parsers"
                 (Just "Main.elm")
         ]
     , describe "Zong's parser"
-        [ describe "utils"
-            [ describe "maybeToPair"
-                [ test "rejects []" <| always <|
-                    Expect.equal Nothing (maybeToPair [])
-                , test "rejects [1]" <| always <|
-                    Expect.equal Nothing (maybeToPair [1])
-                , test "accepts [1, 2]" <| always <|
-                    Expect.equal (Just (1, 2)) (maybeToPair [1, 2])
-                , test "rejects [1, 2, 3]" <| always <|
-                    Expect.equal Nothing (maybeToPair [1, 2, 3])
-                ]
-            , describe "checkKeyIs"
-                [ test "accepts good key" <| always <|
-                    Expect.equal
-                        (Just (1, 2))
-                        (checkKeyIs 1 (1, 2))
-                , test "rejects bad key" <| always <|
-                    Expect.equal
-                        Nothing
-                        (checkKeyIs 100 (1, 2))
-                ]
-            ]
-        , test "it just works" <| always <|
+        [ test "it just works" <| always <|
             Expect.all
                 [ always <| Expect.equal
                     (Just "abc")
@@ -119,8 +95,11 @@ all = describe "many parsers"
                     Nothing
                     (parseFragment "#too=many&arguments=here")
                 , always <| Expect.equal
-                    Nothing
-                    (parseFragment "#even=if&some=are&access_token=not-nothing")
+                    (Just "not-nothing")
+                    (parseFragment "#even=if&some-extra-args=are-here&we-are=ok&access_token=not-nothing")
+                , always <| Expect.equal
+                    (Just "here-it-is")
+                    (parseFragment "#state=some-state&access_token=here-it-is&token_type=Bearer&expires_in=3600")
                 ]
                 ()
         ]

@@ -12,4 +12,5 @@ type Msg
   | DeleteTask ZTaskId
   | UpdateTaskListPrompt String
   | UpdateTaskPrompt String
-
+  | UpdateOAuthKey String
+  | UpdateOAuthSecret String

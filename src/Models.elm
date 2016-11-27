@@ -7,6 +7,8 @@ type alias Model =
   , taskListPrompt : String
   , taskPrompt : String
   , nextIds : NextIds
+  , oauthKey : String
+  , oauthSecret : String
   }
 
 type ZTaskId = ZTaskId Int

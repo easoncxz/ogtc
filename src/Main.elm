@@ -38,6 +38,8 @@ model =
       { task = 0
       , taskList = 0
       }
+  , oauthKey = "key-ish"
+  , oauthSecret = "not-so-secret"
   }
 
 init : (Model, Cmd Msg)
@@ -170,6 +172,10 @@ update msg model =
             ({ model | taskListPrompt = p }, Cmd.none)
         UpdateTaskPrompt p ->
             ({ model | taskPrompt = p }, Cmd.none)
+        UpdateOAuthKey k ->
+            ({ model | oauthKey = k }, Cmd.none)
+        UpdateOAuthSecret s ->
+            ({ model | oauthSecret = s }, Cmd.none)
 
 -- Subscriptions
 
@@ -187,6 +193,25 @@ view : Model -> H.Html Msg
 view model =
   H.div []
     [ H.h1 [] [ H.text "OGTC client" ]
+    , H.div []
+        [ H.h4 [] [ H.text "OAuth info" ]
+        , H.p []
+            [ H.b [] [ H.text "Key: " ]
+            , H.text model.oauthKey
+            , H.input
+                [ HE.onInput UpdateOAuthKey
+                , HA.value model.oauthKey
+                ] []
+            ]
+        , H.p []
+            [ H.b [] [ H.text "Secret: " ]
+            , H.text model.oauthSecret
+            , H.input
+                [ HE.onInput UpdateOAuthSecret
+                , HA.value model.oauthSecret
+                ] []
+            ]
+        ]
     , H.h2 [] [ H.text "Task lists:" ]
     , H.ul []
         (List.map

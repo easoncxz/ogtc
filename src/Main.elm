@@ -206,18 +206,19 @@ view model =
             model.taskLists)
     , H.span []
         [ H.text "New task list:" ]
-    , H.input
-        [ HE.onInput UpdateTaskListPrompt
-        , HA.value model.taskListPrompt
-        , HA.id elemIds.taskListInputElem
+    , H.form [ HE.onSubmit (CreateTaskList (model.taskListPrompt)) ]
+        [ H.input
+            [ HE.onInput UpdateTaskListPrompt
+            , HA.value model.taskListPrompt
+            , HA.id elemIds.taskListInputElem
+            ]
+            []
+        , H.input
+            [ HA.type' "submit"
+            , HA.value "go!"
+            ]
+            []
         ]
-        []
-    , H.input
-        [ HA.type' "button"
-        , HA.value "go!"
-        , HE.onClick (CreateTaskList (model.taskListPrompt))
-        ]
-        []
     , H.h2 [] [ H.text "Tasks in this list:" ]
     , let
         currentTaskList = List.head <|
@@ -240,18 +241,19 @@ view model =
                             tl.tasks)
                     , H.span []
                         [ H.text "New task:" ]
-                    , H.input
-                        [ HE.onInput UpdateTaskPrompt
-                        , HA.value model.taskPrompt
-                        , HA.id elemIds.taskInputElem
+                    , H.form [ HE.onSubmit (CreateTask (model.taskPrompt)) ]
+                        [ H.input
+                            [ HE.onInput UpdateTaskPrompt
+                            , HA.value model.taskPrompt
+                            , HA.id elemIds.taskInputElem
+                            ]
+                            []
+                        , H.input
+                            [ HA.type' "submit"
+                            , HA.value "new task"
+                            ]
+                            []
                         ]
-                        []
-                    , H.input
-                        [ HA.type' "button"
-                        , HA.value "new task"
-                        , HE.onClick <| CreateTask (model.taskPrompt)
-                        ]
-                        []
                     ]
               Nothing ->
                   H.p [] [ H.text "No task-list selected! :)" ]

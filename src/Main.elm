@@ -3,7 +3,6 @@ import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
-import Html.App as App
 import Task
 
 import Messages exposing (Msg(..))
@@ -19,8 +18,8 @@ import Models exposing
 
 -- Main
 
-main : Program Never
-main = App.program
+main : Program Never Model Msg
+main = H.program
   { init          = init
   , update        = update
   , subscriptions = subscriptions
@@ -85,7 +84,7 @@ update msg model =
                     , tasks = []
                     , id = id
                     }
-                m' =
+                m_ =
                     { model
                     | taskLists = taskList :: model.taskLists
                     , currentTaskList = Just id
@@ -93,11 +92,10 @@ update msg model =
                     , nextIds = nextIds
                     }
                 focus =
-                    Task.perform
-                        (always NoOp)
+                    Task.attempt
                         (always NoOp)
                         (Dom.focus elemIds.taskListInputElem)
-            in (m', focus)
+            in (m_, focus)
         DeleteTaskList taskListId ->
             let
                 remainders =
@@ -105,7 +103,7 @@ update msg model =
                         (\tl -> tl.id /= taskListId)
                         model.taskLists
                 removingCurrent = Just taskListId == model.currentTaskList
-                m' =
+                m_ =
                     { model
                     | taskLists = remainders
                     , currentTaskList =
@@ -116,10 +114,10 @@ update msg model =
                         else
                             model.currentTaskList
                     }
-            in (m', Cmd.none)
+            in (m_, Cmd.none)
         SwitchToTaskList selection ->
             let
-                m' =
+                m_ =
                     { model
                     | currentTaskList =
                         let
@@ -130,7 +128,7 @@ update msg model =
                         in
                             Maybe.map (\tl -> tl.id) matched
                     }
-            in (m', Cmd.none)
+            in (m_, Cmd.none)
         CreateTask name ->
             let
                 (id, nextIds) = drawTaskId model.nextIds
@@ -139,7 +137,7 @@ update msg model =
                     , status = NeedsAction
                     , id = id
                     }
-                m' =
+                m_ =
                     { model
                     | taskLists =
                         mapWhere
@@ -149,14 +147,13 @@ update msg model =
                     , nextIds = nextIds
                     , taskPrompt = ""
                     }
-                focus = Task.perform
-                    (always NoOp)
+                focus = Task.attempt
                     (always NoOp)
                     (Dom.focus elemIds.taskInputElem)
-            in (m', focus)
+            in (m_, focus)
         DeleteTask selection ->
             let
-                m' =
+                m_ =
                     { model
                     | taskLists =
                         mapWhere
@@ -168,7 +165,7 @@ update msg model =
                                     model.taskLists
                     }
             in
-                (m', Cmd.none)
+                (m_, Cmd.none)
         UpdateTaskListPrompt p ->
             ({ model | taskListPrompt = p }, Cmd.none)
         UpdateTaskPrompt p ->
@@ -214,7 +211,7 @@ view model =
             ]
             []
         , H.input
-            [ HA.type' "submit"
+            [ HA.type_ "submit"
             , HA.value "go!"
             ]
             []
@@ -249,7 +246,7 @@ view model =
                             ]
                             []
                         , H.input
-                            [ HA.type' "submit"
+                            [ HA.type_ "submit"
                             , HA.value "new task"
                             ]
                             []

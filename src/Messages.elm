@@ -18,3 +18,4 @@ type Msg
   | UpdateOAuthSecret String
   | UpdateLocation Nav.Location
   | UpdateNextUrl String
+  | UpdateAccessToken String

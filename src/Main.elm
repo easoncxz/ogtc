@@ -42,10 +42,13 @@ init loc =
     , oauthSecret = "not-so-secret"
     , location = loc
     , nextUrl = "#default-next-url"
-    , accessToken = parseFragment loc.hash
+    , accessToken = accessTokenFromLocation loc
     }
   in
       (model, Cmd.none)
+
+accessTokenFromLocation : Nav.Location -> Maybe String
+accessTokenFromLocation l = parseFragment l.hash
 
 -- Draw the next task ID from the ID keeper
 drawTaskId : NextIds -> (ZTaskId, NextIds)
@@ -179,9 +182,17 @@ update msg model =
         UpdateOAuthSecret s ->
             ({ model | oauthSecret = s }, Cmd.none)
         UpdateLocation loc ->
-            ({ model | location = loc }, Cmd.none)
+            (
+                { model
+                | location = loc
+                , accessToken = accessTokenFromLocation loc
+                }
+            , Cmd.none
+            )
         UpdateNextUrl n ->
             ({ model | nextUrl = n }, Cmd.none)
+        UpdateAccessToken t ->
+            ({ model | accessToken = Just t }, Cmd.none)
 
 onLocationChange : Nav.Location -> Msg
 onLocationChange = UpdateLocation
@@ -235,6 +246,13 @@ view model =
                         "(nothing)"
                         model.accessToken
                 ]
+            , H.input
+                [ HE.onInput UpdateAccessToken
+                , HA.value <|
+                    Maybe.withDefault
+                        "(nothing here)"
+                        model.accessToken
+                ] []
             ]
         ]
     , H.div []

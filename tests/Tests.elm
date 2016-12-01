@@ -7,6 +7,7 @@ import String
 import Palindromes as P
 
 import UrlParserStudyTests
+import JsonCoding
 
 all : Test
 all =
@@ -24,4 +25,5 @@ all =
             \() ->
                 Expect.equal False (P.isPalindrome "123")
         , UrlParserStudyTests.all
+        , JsonCoding.all
         ]

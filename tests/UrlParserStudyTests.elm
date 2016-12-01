@@ -1,4 +1,3 @@
--- ya29.Ci-jAw0S695T4MgzqJ7L0gMT0NLU0Qjg6pmnoI_UXGmwKJNstWMmOKDv28ZsH3-4oQ
 module UrlParserStudyTests exposing (all)
 
 import Test exposing (..)

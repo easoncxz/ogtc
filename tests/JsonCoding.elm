@@ -1,6 +1,7 @@
 
 module JsonCoding exposing (..)
 
+import Date
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP exposing
   ( required
@@ -11,7 +12,7 @@ import Json.Decode.Pipeline as JDP exposing
 import Test exposing (..)
 import Expect
 
-import MoreDecoders exposing (must)
+import MoreDecoders as MD exposing (must)
 
 type UPoint number
   = UPoint
@@ -232,5 +233,18 @@ all =
                 (JD.string |> JD.andThen (must beGood))
                 """\"good\"""")
           ]
+      , describe "decoding datetime"
+        [ test "simple case" <| \() ->
+          case JD.decodeString
+            MD.date
+            "\"2016-11-25T01:03:25.000Z\"" of
+              Ok d ->
+                Expect.equal
+                  (Date.month d)
+                  Date.Nov
+              Err msg ->
+                Expect.fail "it shouldn't have failed"
+
+        ]
       ]
     ]

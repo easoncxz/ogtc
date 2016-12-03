@@ -11,6 +11,8 @@ import Json.Decode.Pipeline as JDP exposing
 import Test exposing (..)
 import Expect
 
+import MoreDecoders exposing (mustBe)
+
 type UPoint number
   = UPoint
     { x : number
@@ -208,5 +210,30 @@ all =
           (JD.decodeString
             decodeALine
             """{"a" : {"x" : 1, "y":2}, "b": {"x":3, "y"  :4}} """)
+      , describe "value enforcement" <|
+        let
+          why = "It has to be good to be accepted!"
+          good s =
+            if s == "good" then
+              Ok "good"
+            else
+              Err why
+        in
+          [ test "rejection" <| \() ->
+            case JD.decodeString
+              (JD.string |> mustBe good)
+              """\"not that good\"""" of
+              Ok _ ->
+                Expect.fail "It should've been rejected"
+              Err v ->
+                Expect.true "the error message doesn't match" <|
+                  String.contains why v
+          , test "acceptance" <| \() ->
+            Expect.equal
+              (Ok "good")
+              (JD.decodeString
+                (JD.string |> mustBe good)
+                """\"good\"""")
+          ]
       ]
     ]

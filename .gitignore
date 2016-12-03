@@ -5,3 +5,6 @@
 # elm-generated stuff
 elm-stuff/
 tests/elm-stuff/
+
+# priate information
+example-data/

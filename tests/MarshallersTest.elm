@@ -68,6 +68,41 @@ all = describe "Marshallers"
                     ]))
             Err e ->
               Expect.fail (toString e)
+      , test "decode a ListGTasks" <| \() ->
+        let
+          real =
+            """
+              {
+               "kind": "tasks#tasks",
+               "etag": "my-etag",
+               "items": [
+                 {
+                   "kind": "tasks#task",
+                   "id": "task id",
+                   "etag": "another etag",
+                   "title": "task to do",
+                   "updated": "2016-11-25T01:03:25.000Z",
+                   "selfLink": "https://www.googleapis.com/tasks/v1/lists/list-id/task/task-id",
+                   "position": "somewhere",
+                   "notes": "some sort of note",
+                   "status": "needsAction"
+                    }
+                ]
+              }
+            """
+        in
+          case JD.decodeString Ms.listGTasks real of
+            Ok lt ->
+              Expect.true
+                "some prop didn't hold"
+                (List.all
+                  ((|>) lt)
+                  [ \l -> l.nextPageToken == Nothing
+                  , \l -> List.length l.items == 1
+                  , \l -> l.kind == "tasks#tasks"
+                  ])
+            Err e ->
+              Expect.fail (toString e)
       ]
     ]
   ]

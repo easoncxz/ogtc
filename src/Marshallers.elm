@@ -15,12 +15,9 @@ import Models exposing
   )
 import MoreDecoders as MD exposing (must, date)
 
-gTaskLink : Decoder GTaskLink
-gTaskLink =
-  JD.map3 GTaskLink
-    (field "type" string)
-    (field "description" string)
-    (field "link" string)
+maybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
+maybe key decoder =
+  optional key (JD.map Just decoder) Nothing
 
 taskStatus : String -> Decoder TaskStatus
 taskStatus s =
@@ -32,9 +29,12 @@ taskStatus s =
     bad ->
       JD.fail <| "Unrecognizable task status: " ++ bad
 
-maybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
-maybe key decoder =
-  optional key (JD.map Just decoder) Nothing
+gTaskLink : Decoder GTaskLink
+gTaskLink =
+  JD.map3 GTaskLink
+    (field "type" string)
+    (field "description" string)
+    (field "link" string)
 
 gTask : Decoder GTask
 gTask =
@@ -55,3 +55,32 @@ gTask =
     |> optional "deleted" bool False
     |> optional "hidden" bool False
     |> maybe "links" (JD.list gTaskLink)
+
+listGTasks : Decoder ListGTasks
+listGTasks =
+  JD.succeed ListGTasks
+    |> required "kind" (string
+      |> JD.andThen (must ((==) "tasks#tasks")))
+    |> required "etag" string
+    |> maybe "nextPageToken" string
+    |> required "items" (JD.list gTask)
+
+gTaskList : Decoder GTaskList
+gTaskList =
+  JD.succeed GTaskList
+    |> required "kind" (string
+      |> JD.andThen (must ((==) "tasks#tasklist")))
+    |> required "id" string
+    |> required "etag" string
+    |> required "title" string
+    |> required "selfLink" string
+    |> required "updated" date
+
+listGTaskLists : Decoder ListGTaskLists
+listGTaskLists =
+  JD.succeed ListGTaskLists
+    |> required "kind" (string
+      |> JD.andThen (must ((==) "tasks#taskLists")))
+    |> required "etag" string
+    |> maybe "nextPageToken" string
+    |> required "items" (JD.list gTaskList)

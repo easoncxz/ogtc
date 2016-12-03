@@ -67,8 +67,8 @@ type alias GTask =
 type alias ListGTasks =
   { kind          : String
   , etag          : String
-  , nextPageToken : String
-  , items         : List GTaskList
+  , nextPageToken : Maybe String
+  , items         : List GTask
   }
 
 type alias GTaskList =
@@ -76,13 +76,13 @@ type alias GTaskList =
   , id       : String
   , etag     : String
   , title    : String
-  , updated  : Date
   , selfLink : String
+  , updated  : Date
   }
 
 type alias ListGTaskLists =
   { kind          : String
   , etag          : String
-  , nextPageToken : String
+  , nextPageToken : Maybe String
   , items         : List GTaskList
   }

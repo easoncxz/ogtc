@@ -1,11 +1,6 @@
 
 import Debug
-import Dom
-import Html as H
-import Html.Attributes as HA
-import Html.Events as HE
 import Navigation as Nav
-import Task
 
 import Messages exposing (Msg(..))
 import Models exposing
@@ -13,6 +8,7 @@ import Models exposing
   , Model
   )
 import OAuthHelpers exposing (accessTokenFromLocation)
+import Views exposing (view)
 
 undefined : () -> a
 undefined _ = Debug.crash "Not implemented yet!"
@@ -22,7 +18,7 @@ main = Nav.program
   onLocationChange
   { init          = init
   , update        = update
-  , subscriptions = subscriptions
+  , subscriptions = always Sub.none
   , view          = view
   }
 
@@ -40,11 +36,20 @@ init loc =
     model =
       { taskLists = []
       , currentTaskList = Nothing
-      , oauthKey = "OAuth client key"
+      , oauthKey = ""
       , accessToken = accessTokenFromLocation loc
       }
+    cmd =
+      if model.accessToken /= Nothing &&
+          String.length model.oauthKey /= 0 then
+        listTaskLists
+      else
+         Cmd.none
   in
-    (model, Cmd.none)
+    (model, cmd)
+
+listTaskLists : Cmd Msg
+listTaskLists = Cmd.none
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -57,9 +62,3 @@ update msg model =
       ({ model | oauthKey = k }, Cmd.none)
     UpdateAccessToken t ->
       ({ model | accessToken = Just t }, Cmd.none)
-
-subscriptions : Model -> Sub Msg
-subscriptions _ = Sub.none
-
-view : Model -> H.Html Msg
-view model = H.text "hello"

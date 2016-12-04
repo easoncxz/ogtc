@@ -16,3 +16,5 @@ type Msg
   | RefreshClock
   | UpdateTime T.Time
   | ToggleClockEnabled
+  | UpdateOneLocalStorage String
+  | FetchLocalStorage

@@ -1,6 +1,10 @@
 
+port module Main exposing (main)
+
 import Date as D
 import Debug
+import Dict exposing (Dict)
+import Json.Decode as JD
 import Navigation as Nav
 import Random as R
 import Task
@@ -13,6 +17,9 @@ import Models exposing
   )
 import OAuthHelpers exposing (accessTokenFromLocation)
 import Views exposing (view)
+
+port receiveLocalStorage : (JD.Value -> msg) -> Sub msg
+port fetchLocalStorage : () -> Cmd msg
 
 undefined : () -> a
 undefined _ = Debug.crash "Not implemented yet!"
@@ -45,6 +52,7 @@ init loc =
       , dice = 0
       , clockEnabled = False
       , time = Nothing
+      , localStorage = Nothing
       }
     cmd =
       if model.accessToken /= Nothing &&
@@ -85,11 +93,39 @@ update msg model =
       ({ model | time = Just t }, Cmd.none)
     ToggleClockEnabled ->
       ({ model | clockEnabled = not model.clockEnabled }, Cmd.none)
+    UpdateOneLocalStorage s ->
+      ({ model | localStorage = Just s }, Cmd.none)
+    FetchLocalStorage ->
+      (model, fetchLocalStorage ())
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  if model.clockEnabled then
-    T.every T.second UpdateTime
-  else
-    Sub.none
+  Sub.batch
+    [ if model.clockEnabled then
+        T.every T.second UpdateTime
+      else
+        Sub.none
+    , receiveLocalStorage <| \unsafeJson ->
+      case JD.decodeValue (JD.dict JD.string) unsafeJson of
+        Ok safeJson ->
+          let
+            key = "nonExistant243"
+          in
+            case Dict.get key safeJson of
+              Just value ->
+                UpdateOneLocalStorage value
+              Nothing ->
+                let
+                  ignore = Debug.log "KeyError" <|
+                    "key " ++ toString key ++
+                    " not found in " ++
+                    toString safeJson
+                in
+                  NoOp
+        Err e ->
+          let
+            ignore = Debug.log "JSON decode error" e
+          in
+            NoOp
+    ]
 

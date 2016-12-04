@@ -39,4 +39,10 @@ view model =
     , H.button
       [ HE.onClick ToggleClockEnabled ]
       [ H.text "toggle clock" ]
+    , H.hr [] []
+    , H.pre []
+      [ H.text ("From LocalStorage: " ++ toString model.localStorage) ]
+    , H.button
+      [ HE.onClick FetchLocalStorage ]
+      [ H.text "Fetch local storage" ]
     ]

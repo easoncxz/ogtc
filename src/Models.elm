@@ -13,6 +13,7 @@ type alias Model =
   , dice : Int
   , clockEnabled : Bool
   , time : Maybe Time
+  , localStorage : Maybe String
   }
 
 type TaskStatus

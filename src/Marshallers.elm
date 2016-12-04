@@ -1,6 +1,7 @@
 
 module Marshallers exposing (..)
 
+import Date
 import Json.Decode as JD exposing
   (Decoder, field, string, int, field, bool)
 import Json.Decode.Pipeline as JDP exposing (required, optional)
@@ -13,11 +14,31 @@ import Models exposing
   , ListGTaskLists
   , TaskStatus(..)
   )
-import MoreDecoders as MD exposing (must, date)
 
 maybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
 maybe key decoder =
   optional key (JD.map Just decoder) Nothing
+
+must : (a -> Bool) -> a -> Decoder a
+must isAcceptable a =
+  if a |> isAcceptable then
+    JD.succeed a
+  else
+    JD.fail ("The value (" ++ toString a ++
+      ") is considered not acceptable here")
+
+date : Decoder Date.Date
+date =
+  let
+    dateFromString : String -> Decoder Date.Date
+    dateFromString s =
+      case Date.fromString s of
+        Ok d ->
+          JD.succeed d
+        Err msg ->
+          JD.fail msg
+  in
+    JD.string |> JD.andThen dateFromString
 
 taskStatus : String -> Decoder TaskStatus
 taskStatus s =

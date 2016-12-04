@@ -104,6 +104,41 @@ all = describe "Marshallers"
             Err e ->
               Expect.fail (toString e)
       ]
+    , describe "value enforcement" <|
+      let
+        good = "good"
+        beGood s = s == good
+      in
+        [ test "rejection" <| \() ->
+          case JD.decodeString
+            (JD.string |> JD.andThen (Ms.must beGood))
+            """\"not that good\"""" of
+            Ok _ ->
+              Expect.fail "It should've been rejected"
+            Err reason ->
+              Expect.true "the error message doesn't match" <|
+                (reason |> String.contains good) &&
+                (reason |> String.contains "not acceptable")
+        , test "acceptance" <| \() ->
+          Expect.equal
+            (Ok "good")
+            (JD.decodeString
+              (JD.string |> JD.andThen (Ms.must beGood))
+              """\"good\"""")
+        ]
+    , describe "decoding datetime"
+      [ test "simple case" <| \() ->
+        case JD.decodeString
+          Ms.date
+          "\"2016-11-25T01:03:25.000Z\"" of
+            Ok d ->
+              Expect.equal
+                (Date.month d)
+                Date.Nov
+            Err msg ->
+              Expect.fail "it shouldn't have failed"
+
+      ]
     ]
   ]
 

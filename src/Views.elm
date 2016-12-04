@@ -1,6 +1,7 @@
 
 module Views exposing (view)
 
+import Date
 import Dom
 import Html as H
 import Html.Attributes as HA
@@ -20,4 +21,22 @@ view model =
       , H.code []
         [ H.text (toString model.dice) ]
       ]
+    , H.hr [] []
+    , H.p [] [ H.text
+      ("Clock running? --> " ++ toString model.clockEnabled) ]
+    , H.p []
+      [ H.text "Current time: "
+      , H.code []
+        [ H.text (case model.time of
+            Nothing ->
+              "unknown"
+            Just t ->
+              t |> Date.fromTime |> toString) ]
+      ]
+    , H.button
+      [ HE.onClick RefreshClock ]
+      [ H.text "refresh clock" ]
+    , H.button
+      [ HE.onClick ToggleClockEnabled ]
+      [ H.text "toggle clock" ]
     ]

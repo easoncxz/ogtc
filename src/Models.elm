@@ -1,6 +1,7 @@
 
 module Models exposing (..)
 
+import Time exposing (Time)
 import Date exposing (Date)
 import Navigation as Nav
 
@@ -10,6 +11,8 @@ type alias Model =
   , oauthKey : String
   , accessToken : Maybe String
   , dice : Int
+  , clockEnabled : Bool
+  , time : Maybe Time
   }
 
 type TaskStatus

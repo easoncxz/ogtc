@@ -10,3 +10,5 @@ type Msg
   | UpdateTaskListList ListGTaskLists
   | UpdateOAuthKey String
   | UpdateAccessToken String
+  | MakeRoll
+  | ReadRoll Int

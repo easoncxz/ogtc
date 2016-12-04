@@ -1,6 +1,7 @@
 
 import Debug
 import Navigation as Nav
+import Random as R
 
 import Messages exposing (Msg(..))
 import Models exposing
@@ -38,6 +39,7 @@ init loc =
       , currentTaskList = Nothing
       , oauthKey = ""
       , accessToken = accessTokenFromLocation loc
+      , dice = 0
       }
     cmd =
       if model.accessToken /= Nothing &&
@@ -51,6 +53,9 @@ init loc =
 listTaskLists : Cmd Msg
 listTaskLists = Cmd.none
 
+rollCmd : Cmd Msg
+rollCmd = R.generate ReadRoll (R.int 1 6)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -62,3 +67,7 @@ update msg model =
       ({ model | oauthKey = k }, Cmd.none)
     UpdateAccessToken t ->
       ({ model | accessToken = Just t }, Cmd.none)
+    MakeRoll ->
+      (model, rollCmd)
+    ReadRoll n ->
+      ({ model | dice = n }, Cmd.none)

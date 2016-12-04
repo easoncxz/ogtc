@@ -9,6 +9,7 @@ type alias Model =
   , currentTaskList : Maybe String
   , oauthKey : String
   , accessToken : Maybe String
+  , dice : Int
   }
 
 type TaskStatus

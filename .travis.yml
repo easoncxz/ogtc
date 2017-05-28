@@ -1,11 +1,18 @@
 
+sudo: false
+
 language: node_js
 node_js:
     - "7"
 
+cache:
+    directories:
+        - elm-stuff/
+        - tests/elm-stuff/
+
 install:
-    - npm -g install elm
-    - npm -g install elm-test
+    - npm -g install elm@'>=0.18 <0.19'
+    - npm -g install elm-test@'>=0.18 <0.19'
 
 script:
     - elm-test

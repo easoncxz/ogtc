@@ -1,4 +1,3 @@
-
 module JsonCoding exposing (..)
 
 import Date

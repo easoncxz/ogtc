@@ -5,6 +5,7 @@ node_js:
 
 install:
     - npm -g install elm
+    - npm -g install elm-test
 
 script:
     - elm-test

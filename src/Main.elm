@@ -82,6 +82,14 @@ update msg model =
             List.map Models.fromGTaskList listGTaskLists.items }
       , Cmd.none
       )
+    SelectTaskList zTaskList ->
+      ( { model
+        | currentTaskList =
+            if model.currentTaskList == Just zTaskList then
+              Nothing
+            else
+              Just zTaskList
+        }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none

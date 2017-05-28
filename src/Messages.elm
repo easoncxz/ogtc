@@ -13,3 +13,4 @@ type Msg
   | UpdateAccessToken String
   | QueryTasklists
   | ReceiveQueryTasklists Marshallers.ListGTaskLists
+  | SelectTaskList ZTaskList

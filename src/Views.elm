@@ -7,7 +7,7 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 
-import Models exposing (Model)
+import Models exposing (Model, ZTaskList)
 import Messages exposing (Msg)
 import OAuthHelpers exposing (makeAuthorizeUrl)
 
@@ -79,12 +79,26 @@ viewMainPage model =
             "You have no tasklists." ]
         Just ls ->
           let
-            viewTitle taskList =
-              H.li [] [ H.text taskList.meta.title ]
+            viewTitle : Maybe ZTaskList -> ZTaskList -> H.Html Msg
+            viewTitle focus taskList =
+              let
+                prefix =
+                  case focus of
+                    Nothing ->
+                      "- "
+                    Just ztl ->
+                      if ztl.meta.id == taskList.meta.id then
+                        "* "
+                      else
+                        "- "
+              in
+                H.li
+                  [ HE.onClick (Messages.SelectTaskList taskList) ]
+                  [ H.text (prefix ++ taskList.meta.title) ]
           in
             H.div []
               [ H.p [] [ H.text "Tasklists: " ]
               , H.ul [] <|
-                List.map viewTitle ls
+                List.map (viewTitle model.currentTaskList) ls
               ]
     ]

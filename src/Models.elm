@@ -11,7 +11,6 @@ type alias Model =
   , currentTask : Maybe GTask
   , oauthKey : Maybe String
   , accessToken : Maybe String
-
   }
 
 type alias ZTaskList =

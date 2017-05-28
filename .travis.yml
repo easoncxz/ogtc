@@ -1,0 +1,10 @@
+
+language: node_js
+node_js:
+    - "7"
+
+install:
+    - npm -g install elm
+
+script:
+    - elm-test

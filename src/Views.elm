@@ -63,4 +63,21 @@ viewMainPage model =
             [ H.span [] [ H.text "Access token: " ]
             , H.code [] [ H.text accessToken ]
             ]
+    , case model.taskLists of
+        Nothing ->
+          H.p [] [ H.text
+            "Tasklists not loaded." ]
+        Just [] ->
+          H.p [] [ H.text
+            "You have no tasklists." ]
+        Just ls ->
+          let
+            viewTitle taskList =
+              H.li [] [ H.text taskList.meta.title ]
+          in
+            H.div []
+              [ H.p [] [ H.text "Tasklists: " ]
+              , H.ul [] <|
+                List.map viewTitle ls
+              ]
     ]

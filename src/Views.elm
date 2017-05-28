@@ -65,8 +65,15 @@ viewMainPage model =
             ]
     , case model.taskLists of
         Nothing ->
-          H.p [] [ H.text
-            "Tasklists not loaded." ]
+          H.div []
+            [ H.p [] [ H.text
+                "Tasklists not loaded." ]
+            , H.input
+              [ HA.type_ "button"
+              , HA.value "Load Tasklists"
+              , HE.onClick Messages.QueryTasklists
+              ] []
+            ]
         Just [] ->
           H.p [] [ H.text
             "You have no tasklists." ]

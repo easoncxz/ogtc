@@ -4,6 +4,7 @@ port module Main exposing (main)
 import Date as D
 import Debug
 import Dict exposing (Dict)
+import Http
 import Json.Decode as JD
 import Navigation as Nav
 import Random as R
@@ -55,6 +56,32 @@ update msg model =
       ({ model | oauthKey = Just k }, Cmd.none)
     UpdateAccessToken t ->
       ({ model | accessToken = Just t }, Cmd.none)
+    QueryTasklists ->
+      case model.accessToken of
+        Nothing ->
+          Debug.crash "We need an OAuth access token to make requests"
+        Just accessToken ->
+          (model, Http.send
+            (\result -> case result of
+                Ok listGTaskList ->
+                  ReceiveQueryTasklists listGTaskList
+                Err e ->
+                  Debug.crash "HTTP error while getting tasklists")
+            (Http.request
+              { method = "GET"
+              , headers =
+                  [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+              , url = "https://www.googleapis.com/tasks/v1/users/@me/lists"
+              , body = Http.emptyBody
+              , expect = Http.expectJson Marshallers.listGTaskLists
+              , timeout = Nothing
+              , withCredentials = False
+              }))
+    ReceiveQueryTasklists listGTaskLists ->
+      ( { model | taskLists = Just <|
+            List.map Models.fromGTaskList listGTaskLists.items }
+      , Cmd.none
+      )
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none

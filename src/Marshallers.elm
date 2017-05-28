@@ -6,6 +6,8 @@ import Json.Decode as JD exposing
   (Decoder, field, string, int, field, bool)
 import Json.Decode.Pipeline as JDP exposing (required, optional)
 
+-- | A Json.Decode.Pipeline -compatible decoder that has the
+-- same semantics as Json.Decode.maybe
 maybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
 maybe key decoder =
   optional key (JD.map Just decoder) Nothing
@@ -54,7 +56,7 @@ gTask =
     |> required "kind" (string
       |> JD.andThen (must ((==) "tasks#task")))
     |> required "id" string
-    |> required "etag" string
+    |> maybe "etag" string
     |> required "title" string
     |> required "updated" date
     |> required "selfLink" string
@@ -73,7 +75,7 @@ listGTasks =
   JD.succeed ListGTasks
     |> required "kind" (string
       |> JD.andThen (must ((==) "tasks#tasks")))
-    |> required "etag" string
+    |> maybe "etag" string
     |> maybe "nextPageToken" string
     |> required "items" (JD.list gTask)
 
@@ -81,9 +83,9 @@ gTaskList : Decoder GTaskList
 gTaskList =
   JD.succeed GTaskList
     |> required "kind" (string
-      |> JD.andThen (must ((==) "tasks#tasklist")))
+      |> JD.andThen (must ((==) "tasks#taskList")))
     |> required "id" string
-    |> required "etag" string
+    |> maybe "etag" string
     |> required "title" string
     |> required "selfLink" string
     |> required "updated" date
@@ -93,7 +95,7 @@ listGTaskLists =
   JD.succeed ListGTaskLists
     |> required "kind" (string
       |> JD.andThen (must ((==) "tasks#taskLists")))
-    |> required "etag" string
+    |> maybe "etag" string
     |> maybe "nextPageToken" string
     |> required "items" (JD.list gTaskList)
 
@@ -110,7 +112,7 @@ type alias GTaskLink =
 type alias GTask =
   { kind      : String
   , id        : String
-  , etag      : String
+  , etag      : Maybe String
   , title     : String
   , updated   : Date
   , selfLink  : String
@@ -127,7 +129,7 @@ type alias GTask =
 
 type alias ListGTasks =
   { kind          : String
-  , etag          : String
+  , etag          : Maybe String
   , nextPageToken : Maybe String
   , items         : List GTask
   }
@@ -135,7 +137,7 @@ type alias ListGTasks =
 type alias GTaskList =
   { kind     : String
   , id       : String
-  , etag     : String
+  , etag     : Maybe String
   , title    : String
   , selfLink : String
   , updated  : Date
@@ -143,7 +145,7 @@ type alias GTaskList =
 
 type alias ListGTaskLists =
   { kind          : String
-  , etag          : String
+  , etag          : Maybe String
   , nextPageToken : Maybe String
   , items         : List GTaskList
   }

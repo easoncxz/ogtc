@@ -47,7 +47,7 @@ all = describe "Marshallers"
               "position": "pos-abcd",
               "notes": "notes here",
               "status": "needsAction"
-  }
+            }
           """
         in
           case JD.decodeString Ms.gTask real of
@@ -59,6 +59,7 @@ all = describe "Marshallers"
                   (List.map
                     ((|>) gtask)
                     [ \t -> t.id == "my-id"
+                    , \t -> t.etag /= Nothing
                     , \t -> t.parent /= Nothing
                     , \t -> t.status == NeedsAction
                     , \t -> (Date.month t.updated == Date.Aug)
@@ -67,7 +68,9 @@ all = describe "Marshallers"
                     ]))
             Err e ->
               Expect.fail (toString e)
-      , test "decode a ListGTasks" <| \() ->
+      ]
+    , describe "ListGTasks decoder"
+      [ test "decode a ListGTasks" <| \() ->
         let
           real =
             """
@@ -78,7 +81,6 @@ all = describe "Marshallers"
                  {
                    "kind": "tasks#task",
                    "id": "task id",
-                   "etag": "another etag",
                    "title": "task to do",
                    "updated": "2016-11-25T01:03:25.000Z",
                    "selfLink": "https://www.googleapis.com/tasks/v1/lists/list-id/task/task-id",
@@ -99,6 +101,29 @@ all = describe "Marshallers"
                   [ \l -> l.nextPageToken == Nothing
                   , \l -> List.length l.items == 1
                   , \l -> l.kind == "tasks#tasks"
+                  ])
+            Err e ->
+              Expect.fail (toString e)
+      ]
+    , describe "GTaskList decoder"
+      [ test "one real value" <| \() ->
+        let
+          real = """{
+            "kind": "tasks#taskList",
+            "id": "some-tasklist-id",
+            "title": "some-title",
+            "updated": "2017-05-26T15:18:49.000Z",
+            "selfLink": "https://www.googleapis.com/tasks/v1/users/@me/lists/some-tasklist-id"
+          }"""
+        in
+          case JD.decodeString Ms.gTaskList real of
+            Ok tl ->
+              Expect.true
+                "some prop didn't hold"
+                (List.all
+                  ((|>) tl)
+                  [ \tl -> tl.id == "some-tasklist-id"
+                  , \tl -> tl.etag == Nothing
                   ])
             Err e ->
               Expect.fail (toString e)

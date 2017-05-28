@@ -18,3 +18,9 @@ type alias ZTaskList =
   { meta: GTaskList
   , tasks: List GTask
   }
+
+fromGTaskList : GTaskList -> ZTaskList
+fromGTaskList gTaskList =
+  { meta = gTaskList
+  , tasks = []
+  }

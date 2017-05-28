@@ -1,5 +1,5 @@
 
-module Views exposing (view)
+module Views exposing (..)
 
 import Date
 import Dom
@@ -7,42 +7,47 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 
-import Models exposing (..)
-import Messages exposing (..)
+import Models exposing (Model)
+import Messages exposing (Msg)
+import OAuthHelpers exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =
-  H.div []
-    [ H.button
-      [ HE.onClick MakeRoll ]
-      [ H.text "roll a dice" ]
-    , H.div []
-      [ H.text "dice roll: "
-      , H.code []
-        [ H.text (toString model.dice) ]
+  case model.accessToken of
+    Nothing ->
+      viewLoginPage model
+    Just token ->
+      H.p [] [ H.text "(info about tasklists)" ]
+
+viewLoginPage : Model -> H.Html Msg
+viewLoginPage model =
+  let
+    viewOAuthKeyInput =
+      H.div [] [ H.input
+        [ HE.onInput Messages.UpdateOAuthKey
+        , HA.value <|
+            case model.oauthKey of
+              Nothing ->
+                ""
+              Just oauthKey ->
+                oauthKey
+        ]
+        [ H.text "OAuth client key" ] ]
+    viewAuthoriseButton =
+      case model.oauthKey of
+        Nothing ->
+          H.p [] [ H.text
+          "We need an OAuth client key to initiate authorisation." ]
+        Just oauthKey ->
+          H.p [] [ H.a
+            [ HA.href <|
+              makeAuthorizeUrl
+              oauthKey
+              "https://localhost/src/Main.elm"
+              "state-here" ]
+            [ H.text "Authorise via Google OAuth" ] ]
+  in
+    H.div []
+      [ viewOAuthKeyInput
+      , viewAuthoriseButton
       ]
-    , H.hr [] []
-    , H.p [] [ H.text
-      ("Clock running? --> " ++ toString model.clockEnabled) ]
-    , H.p []
-      [ H.text "Current time: "
-      , H.code []
-        [ H.text (case model.time of
-            Nothing ->
-              "unknown"
-            Just t ->
-              t |> Date.fromTime |> toString) ]
-      ]
-    , H.button
-      [ HE.onClick RefreshClock ]
-      [ H.text "refresh clock" ]
-    , H.button
-      [ HE.onClick ToggleClockEnabled ]
-      [ H.text "toggle clock" ]
-    , H.hr [] []
-    , H.pre []
-      [ H.text ("From LocalStorage: " ++ toString model.localStorage) ]
-    , H.button
-      [ HE.onClick FetchLocalStorage ]
-      [ H.text "Fetch local storage" ]
-    ]

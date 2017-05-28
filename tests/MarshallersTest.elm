@@ -6,8 +6,7 @@ import Json.Decode as JD
 import Test exposing (..)
 import Expect
 
-import Models exposing (TaskStatus(..))
-import Marshallers as Ms
+import Marshallers as Ms exposing (TaskStatus(..))
 
 all : Test
 all = describe "Marshallers"

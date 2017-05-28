@@ -17,7 +17,7 @@ view model =
     Nothing ->
       viewLoginPage model
     Just token ->
-      H.p [] [ H.text "(info about tasklists)" ]
+      viewMainPage model
 
 viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =
@@ -51,3 +51,16 @@ viewLoginPage model =
       [ viewOAuthKeyInput
       , viewAuthoriseButton
       ]
+
+viewMainPage : Model -> H.Html Msg
+viewMainPage model =
+  H.div []
+    [ case model.accessToken of
+        Nothing ->
+          H.p [] [ H.text "No access token found" ]
+        Just accessToken ->
+          H.div []
+            [ H.span [] [ H.text "Access token: " ]
+            , H.code [] [ H.text accessToken ]
+            ]
+    ]

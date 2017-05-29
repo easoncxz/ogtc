@@ -115,18 +115,18 @@ viewOneTaskList taskListMaybe =
     Nothing ->
       H.p [] [ H.text "No tasklist selected" ]
     Just taskList ->
-      H.div []
-        [ H.p [] [ H.text <|
-            "Tasks in " ++ taskList.meta.title ++ ":" ]
-        , case taskList.tasks of
-            [] ->
-              H.p [] [ H.text "This list has no tasks" ]
-            tasks ->
-              H.ul [] <|
+      case taskList.tasks of
+        [] ->
+          H.p [] [ H.text "This list has no tasks" ]
+        tasks ->
+          H.div []
+            [ H.p [] [ H.text <|
+                "Tasks in " ++ taskList.meta.title ++ ":" ]
+            , H.ul [] <|
                 let
                   viewTaskTitle : Marshallers.GTask -> H.Html Msg
                   viewTaskTitle t =
                     H.li [] [ H.text t.title ]
                 in
                   List.map viewTaskTitle tasks
-        ]
+            ]

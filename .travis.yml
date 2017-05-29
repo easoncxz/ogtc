@@ -3,12 +3,14 @@ sudo: false
 
 language: node_js
 node_js:
-    - "7"
+    - "6.10"
 
 cache:
     directories:
-        - elm-stuff/
-        - tests/elm-stuff/
+        - elm-stuff/build-artifacts/
+        - elm-stuff/packages/
+        - tests/elm-stuff/build-artifacts/
+        - tests/elm-stuff/packages/
 
 install:
     - npm -g install elm@'>=0.18 <0.19'

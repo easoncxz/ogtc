@@ -14,3 +14,4 @@ type Msg
   | QueryTasklists
   | ReceiveQueryTasklists Marshallers.ListGTaskLists
   | SelectTaskList ZTaskList
+  | ReceiveQueryTasks Marshallers.ListGTasks

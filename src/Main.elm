@@ -83,13 +83,38 @@ update msg model =
       , Cmd.none
       )
     SelectTaskList zTaskList ->
-      ( { model
-        | currentTaskList =
-            if model.currentTaskList == Just zTaskList then
-              Nothing
-            else
-              Just zTaskList
-        }, Cmd.none)
+      ( { model | currentTaskList = Just zTaskList }
+      , case model.accessToken of
+          Nothing ->
+            Debug.crash "We need an OAuth access token to make requests"
+          Just accessToken ->
+            Http.send
+              (\result -> case result of
+                  Ok listGTasks ->
+                    ReceiveQueryTasks listGTasks
+                  Err e ->
+                    Debug.crash "HTTP error while getting tasks")
+              (Http.request
+                { method = "GET"
+                , headers =
+                    [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+                , url =
+                    "https://www.googleapis.com/tasks/v1/lists/"
+                    ++ zTaskList.meta.id
+                    ++ "/tasks"
+                , body = Http.emptyBody
+                , expect = Http.expectJson Marshallers.listGTasks
+                , timeout = Nothing
+                , withCredentials = False
+                }))
+    ReceiveQueryTasks listGTasks ->
+      ( { model | currentTaskList =
+            Maybe.map
+              (\curr ->
+                { curr | tasks = listGTasks.items })
+              model.currentTaskList }
+      , Cmd.none
+      )
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none

@@ -17,6 +17,10 @@ import Models exposing (Model)
 import OAuthHelpers exposing (accessTokenFromLocation)
 import Views exposing (view)
 
+port setOAuthClientId : Maybe String -> Cmd a
+port requestOAuthClientId : () -> Cmd a
+port receiveOAuthClientId : (Maybe String -> a) -> Sub a
+
 main : Program Never Model Msg
 main = Nav.program
   onLocationChange
@@ -45,7 +49,7 @@ init loc =
       , accessToken = accessTokenFromLocation loc
       }
   in
-    (model, Cmd.none)
+    (model, requestOAuthClientId ())
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -115,6 +119,13 @@ update msg model =
               model.currentTaskList }
       , Cmd.none
       )
+    SetOAuthClientId oauthKey ->
+      (model, setOAuthClientId oauthKey)
+    RequestOAuthClientId ->
+      (model, requestOAuthClientId ())
+    ReceiveOAuthClientId oauthKey ->
+      ({ model | oauthKey = oauthKey }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
-subscriptions model = Sub.none
+subscriptions model =
+  receiveOAuthClientId ReceiveOAuthClientId

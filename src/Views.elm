@@ -24,16 +24,25 @@ viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =
   let
     viewOAuthKeyInput =
-      H.div [] [ H.input
-        [ HE.onInput Messages.UpdateOAuthKey
-        , HA.value <|
-            case model.oauthKey of
-              Nothing ->
-                ""
-              Just oauthKey ->
-                oauthKey
+      H.div []
+        [ H.input
+            [ HE.onInput Messages.UpdateOAuthKey
+            , HA.value <|
+                case model.oauthKey of
+                  Nothing ->
+                    ""
+                  Just oauthKey ->
+                    oauthKey
+            ]
+            [ H.text "OAuth client key" ]
+        , H.input
+            [ HA.type_ "button"
+            , HE.onClick <|
+                Messages.SetOAuthClientId model.oauthKey
+            , HA.value "save"
+            ]
+            []
         ]
-        [ H.text "OAuth client key" ] ]
     viewAuthoriseButton =
       case model.oauthKey of
         Nothing ->
@@ -44,7 +53,7 @@ viewLoginPage model =
             [ HA.href <|
               makeAuthorizeUrl
               oauthKey
-              "https://localhost/src/Main.elm"
+              "https://localhost/index.html"
               "state-here" ]
             [ H.text "Authorise via Google OAuth" ] ]
   in

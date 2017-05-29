@@ -73,6 +73,6 @@ makeAuthorizeUrl oauthKey url state =
     ++ "&redirect_uri="  ++ url
     ++ "&scope="         ++ "https://www.googleapis.com/auth/tasks"
     ++ "&state="         ++ state
-    ++ "&prompt="        ++ "consent"
+    ++ "&prompt="        ++ "none"
     )
 

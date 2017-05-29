@@ -15,3 +15,6 @@ type Msg
   | ReceiveQueryTasklists Marshallers.ListGTaskLists
   | SelectTaskList ZTaskList
   | ReceiveQueryTasks Marshallers.ListGTasks
+  | SetOAuthClientId (Maybe String)
+  | RequestOAuthClientId
+  | ReceiveOAuthClientId (Maybe String)

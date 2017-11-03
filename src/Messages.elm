@@ -18,3 +18,4 @@ type Msg
   | SetOAuthClientId (Maybe String)
   | RequestOAuthClientId
   | ReceiveOAuthClientId (Maybe String)
+  | ReceiveOAuthAccessToken (Maybe String)

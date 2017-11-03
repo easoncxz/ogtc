@@ -8,4 +8,14 @@ function loadExtras(app) {
     app.ports.receiveOAuthClientId.send(
       localStorage.getItem(oauthClientIdKey));
   });
+
+  const oauthAccessTokenKey = 'oauthAccessToken';
+  app.ports.setOAuthAccessToken.subscribe(token => {
+    localStorage.setItem(oauthAccessTokenKey, token);
+  });
+  app.ports.requestOAuthAccessToken.subscribe(() => {
+    app.ports.receiveOAuthAccessToken.send(
+      localStorage.getItem(oauthAccessTokenKey));
+  });
+
 }

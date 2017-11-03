@@ -21,6 +21,10 @@ port setOAuthClientId : Maybe String -> Cmd a
 port requestOAuthClientId : () -> Cmd a
 port receiveOAuthClientId : (Maybe String -> a) -> Sub a
 
+port setOAuthAccessToken : Maybe String -> Cmd a
+port requestOAuthAccessToken : () -> Cmd a
+port receiveOAuthAccessToken : (Maybe String -> a) -> Sub a
+
 main : Program Never Model Msg
 main = Nav.program
   onLocationChange
@@ -49,7 +53,16 @@ init loc =
       , accessToken = accessTokenFromLocation loc
       }
   in
-    (model, requestOAuthClientId ())
+    ( model
+    , Cmd.batch
+      [ requestOAuthClientId ()
+      , case model.accessToken of
+          Nothing ->
+            requestOAuthAccessToken ()
+          Just t ->
+            setOAuthAccessToken (Just t)
+      ]
+    )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -125,7 +138,12 @@ update msg model =
       (model, requestOAuthClientId ())
     ReceiveOAuthClientId oauthKey ->
       ({ model | oauthKey = oauthKey }, Cmd.none)
+    ReceiveOAuthAccessToken t ->
+      ({ model | accessToken = t }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  receiveOAuthClientId ReceiveOAuthClientId
+  Sub.batch
+    [ receiveOAuthClientId ReceiveOAuthClientId
+    , receiveOAuthAccessToken ReceiveOAuthAccessToken
+    ]

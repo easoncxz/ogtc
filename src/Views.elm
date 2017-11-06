@@ -19,29 +19,35 @@ import OAuthHelpers exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =
-  Scheme.top <|
-    Layout.render
-      Messages.Mdl
-      model.mdl
-      [ Layout.fixedHeader ]
-      { header =
-          [ Layout.row
-              [ Options.nop ]  -- styles
-              [ Layout.title
-                [ Options.nop ] -- styles
-                [ H.text "Header here!" ]
-              ]
-          ]
-      , drawer = []
-      , tabs = ([], [])
-      , main =
-        [ case model.accessToken of
-            Nothing ->
-              viewLoginPage model
-            Just token ->
-              viewMainPage model
+  Scheme.top <| viewLayout model
+
+viewLayout : Model -> H.Html Msg
+viewLayout model =
+  Layout.render
+    Messages.Mdl
+    model.mdl
+    [ Layout.fixedHeader ]
+    { header =
+        [ Layout.row
+            [ Options.nop ]  -- styles
+            [ Layout.title
+              [ Options.nop ] -- styles
+              [ H.text "Header here!" ]
+            ]
         ]
-      }
+    , drawer = []
+    , tabs = ([], [])
+    , main = [ viewMain model ]
+    }
+
+
+viewMain : Model -> H.Html Msg
+viewMain model =
+  case model.accessToken of
+    Nothing ->
+      viewLoginPage model
+    Just token ->
+      viewMainPage model
 
 viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =

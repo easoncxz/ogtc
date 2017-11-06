@@ -10,6 +10,7 @@ import Navigation as Nav
 import Random as R
 import Task
 import Time as T
+import Material
 
 import Messages exposing (Msg(..))
 import Marshallers
@@ -51,11 +52,13 @@ init loc =
       , currentTask = Nothing
       , oauthKey = Nothing
       , accessToken = accessTokenFromLocation loc
+      , mdl = Material.model
       }
   in
     ( model
     , Cmd.batch
-      [ requestOAuthClientId ()
+      [ Material.init Mdl
+      , requestOAuthClientId ()
       , case model.accessToken of
           Nothing ->
             requestOAuthAccessToken ()
@@ -69,6 +72,8 @@ update msg model =
   case msg of
     NoOp ->
       (model, Cmd.none)
+    Mdl msg_ ->
+      Material.update Mdl msg_ model
     UpdateOAuthKey k ->
       ({ model | oauthKey = Just k }, Cmd.none)
     UpdateAccessToken t ->
@@ -144,6 +149,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
-    [ receiveOAuthClientId ReceiveOAuthClientId
+    [ Material.subscriptions Mdl model
+    , receiveOAuthClientId ReceiveOAuthClientId
     , receiveOAuthAccessToken ReceiveOAuthAccessToken
     ]

@@ -6,19 +6,42 @@ import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
+import Material
+import Material.Scheme as Scheme
+import Material.Layout as Layout
+import Material.Options as Options
 
 import Marshallers
 import Models exposing (Model, ZTaskList)
+import Messages
 import Messages exposing (Msg)
 import OAuthHelpers exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =
-  case model.accessToken of
-    Nothing ->
-      viewLoginPage model
-    Just token ->
-      viewMainPage model
+  Scheme.top <|
+    Layout.render
+      Messages.Mdl
+      model.mdl
+      [ Layout.fixedHeader ]
+      { header =
+          [ Layout.row
+              [ Options.nop ]  -- styles
+              [ Layout.title
+                [ Options.nop ] -- styles
+                [ H.text "Header here!" ]
+              ]
+          ]
+      , drawer = []
+      , tabs = ([], [])
+      , main =
+        [ case model.accessToken of
+            Nothing ->
+              viewLoginPage model
+            Just token ->
+              viewMainPage model
+        ]
+      }
 
 viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =

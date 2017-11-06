@@ -1,6 +1,7 @@
 
 module Models exposing (..)
 
+import Material
 import Navigation as Nav
 
 import Marshallers exposing (GTask, GTaskList)
@@ -11,6 +12,7 @@ type alias Model =
   , currentTask : Maybe GTask
   , oauthKey : Maybe String
   , accessToken : Maybe String
+  , mdl : Material.Model
   }
 
 type alias ZTaskList =

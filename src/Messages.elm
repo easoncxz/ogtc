@@ -3,6 +3,7 @@ module Messages exposing (..)
 
 import Time as T
 import Navigation as Nav
+import Material
 
 import Models exposing (..)
 import Marshallers
@@ -19,3 +20,4 @@ type Msg
   | RequestOAuthClientId
   | ReceiveOAuthClientId (Maybe String)
   | ReceiveOAuthAccessToken (Maybe String)
+  | Mdl (Material.Msg Msg)

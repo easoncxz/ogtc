@@ -15,11 +15,11 @@ type alias Model =
 
 type alias ZTaskList =
   { meta: GTaskList
-  , tasks: List GTask
+  , tasks: Maybe (List GTask)
   }
 
 fromGTaskList : GTaskList -> ZTaskList
 fromGTaskList gTaskList =
   { meta = gTaskList
-  , tasks = []
+  , tasks = Nothing
   }

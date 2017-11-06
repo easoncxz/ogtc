@@ -125,9 +125,11 @@ viewOneTaskList taskListMaybe =
       H.p [] [ H.text "No tasklist selected" ]
     Just taskList ->
       case taskList.tasks of
-        [] ->
+        Nothing ->
+          H.p [] [ H.text "Loading tasks..." ]
+        Just [] ->
           H.p [] [ H.text "This list has no tasks" ]
-        tasks ->
+        Just tasks ->
           H.div []
             [ H.p [] [ H.text <|
                 "Tasks in " ++ taskList.meta.title ++ ":" ]

@@ -128,7 +128,7 @@ update msg model =
       ( { model | currentTaskList =
             Maybe.map
               (\curr ->
-                { curr | tasks = listGTasks.items })
+                { curr | tasks = Just listGTasks.items })
               model.currentTaskList }
       , Cmd.none
       )

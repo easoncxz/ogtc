@@ -10,6 +10,7 @@ import Material
 import Material.Scheme as Scheme
 import Material.Layout as Layout
 import Material.Options as Options
+import Material.Elevation as Elevation
 
 import Marshallers
 import Models exposing (Model, ZTaskList)
@@ -35,19 +36,36 @@ viewLayout model =
               [ H.text "Header here!" ]
             ]
         ]
-    , drawer = []
+    , drawer =
+        [ Layout.title [] [ H.text "Drawer title" ]
+        , Layout.navigation []
+            [ Layout.link [] [ H.text "one" ]
+            , Layout.link [] [ H.text "two" ]
+            , Layout.link [] [ H.text "three" ]
+            ]
+        ]
     , tabs = ([], [])
     , main = [ viewMain model ]
     }
 
+boxed : H.Attribute m
+boxed =
+  HA.style
+    [ ("padding-left", "8%")
+    , ("padding-right", "8%")
+    , ("margin", "auto")
+    ]
 
 viewMain : Model -> H.Html Msg
 viewMain model =
-  case model.accessToken of
-    Nothing ->
-      viewLoginPage model
-    Just token ->
-      viewMainPage model
+  H.div
+    [ boxed ]
+    [ case model.accessToken of
+        Nothing ->
+          viewLoginPage model
+        Just token ->
+          viewMainPage model token
+    ]
 
 viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =
@@ -91,17 +109,12 @@ viewLoginPage model =
       , viewAuthoriseButton
       ]
 
-viewMainPage : Model -> H.Html Msg
-viewMainPage model =
+viewMainPage : Model -> String -> H.Html Msg
+viewMainPage model accessToken =
   H.div []
-    [ case model.accessToken of
-        Nothing ->
-          H.p [] [ H.text "No access token found" ]
-        Just accessToken ->
-          H.div []
-            [ H.span [] [ H.text "Access token: " ]
-            , H.code [] [ H.text accessToken ]
-            ]
+    [ H.h1 [] [ H.text "ogtc" ]
+    , H.p [] [ H.text "Access token: " ]
+    , H.div [] [ H.text accessToken ]
     , viewTaskLists model.taskLists model.currentTaskList
     , viewOneTaskList model.currentTaskList
     ]

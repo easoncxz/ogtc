@@ -39,20 +39,25 @@ view model =
 viewHeader : Model -> List (H.Html Msg)
 viewHeader model =
   [ Layout.row []
-    [ Layout.title []
-        [ H.text "ogtc"
-        ]
+    [ Layout.title [] [ H.text "ogtc" ]
     ]
   ]
 
+viewTasklistTitle : ZTaskList -> H.Html Msg
+viewTasklistTitle l =
+  Layout.link
+    [ Options.onClick (Messages.SelectTaskList l) ]
+    [ H.text l.meta.title ]
+
 viewDrawer : Model -> List (H.Html Msg)
 viewDrawer model =
-  [ Layout.title [] [ H.text "Drawer title" ]
-  , Layout.navigation []
-      [ Layout.link [] [ H.text "one" ]
-      , Layout.link [] [ H.text "two" ]
-      , Layout.link [] [ H.text "three" ]
-      ]
+  [ Layout.title [] [ H.text "Task lists" ]
+  , Layout.navigation [] <|
+      case model.taskLists of
+        Nothing ->
+          [ Layout.link [] [ H.text "Loading tasklists..." ] ]
+        Just taskLists ->
+          List.map viewTasklistTitle taskLists
   ]
 
 boxed : List (Options.Style m)
@@ -68,7 +73,7 @@ viewMain model =
       Nothing ->
         viewLoginPage model
       Just token ->
-        viewMainPage model token
+        viewHomePage model token
   ]
 
 viewLoginPage : Model -> H.Html Msg
@@ -122,56 +127,15 @@ viewLoginPage model =
             [ H.text "Authorise via Google OAuth" ]
     ]
 
-viewMainPage : Model -> String -> H.Html Msg
-viewMainPage model accessToken =
-  H.div []
-    [ H.h1 [] [ H.text "ogtc" ]
+viewHomePage : Model -> String -> H.Html Msg
+viewHomePage model accessToken =
+  Options.div [ Options.many boxed ]
+    [ H.h1 [] [ H.text "current task-list name" ]
     , H.p [] [ H.text "Access token: " ]
-    , H.div [] [ H.text accessToken ]
-    , viewTaskLists model.taskLists model.currentTaskList
+    , H.p [] [ H.text accessToken ]
     , viewOneTaskList model.currentTaskList
     ]
 
-viewTaskLists : Maybe (List ZTaskList) -> Maybe ZTaskList -> H.Html Msg
-viewTaskLists taskLists currentTaskList =
-  case taskLists of
-    Nothing ->
-      H.div []
-        [ H.p [] [ H.text
-            "Tasklists not loaded." ]
-        , H.input
-          [ HA.type_ "button"
-          , HA.value "Load Tasklists"
-          , HE.onClick Messages.QueryTasklists
-          ] []
-        ]
-    Just [] ->
-      H.p [] [ H.text
-        "You have no tasklists." ]
-    Just ls ->
-      let
-        viewTitle : Maybe ZTaskList -> ZTaskList -> H.Html Msg
-        viewTitle focus taskList =
-          let
-            prefix =
-              case focus of
-                Nothing ->
-                  "- "
-                Just ztl ->
-                  if ztl.meta.id == taskList.meta.id then
-                    "* "
-                  else
-                    "- "
-          in
-            H.li
-              [ HE.onClick (Messages.SelectTaskList taskList) ]
-              [ H.text (prefix ++ taskList.meta.title) ]
-      in
-        H.div []
-          [ H.p [] [ H.text "Tasklists: " ]
-          , H.ul [] <|
-            List.map (viewTitle currentTaskList) ls
-          ]
 
 viewOneTaskList : Maybe ZTaskList -> H.Html Msg
 viewOneTaskList taskListMaybe =

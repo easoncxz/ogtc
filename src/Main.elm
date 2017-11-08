@@ -46,26 +46,48 @@ onLocationChange loc =
 init : Nav.Location -> (Model, Cmd Msg)
 init loc =
   let
-    model =
-      { taskLists = Nothing
+    tokenFromUrl = accessTokenFromLocation loc
+  in
+    ( { taskLists = Nothing
       , currentTaskList = Nothing
       , currentTask = Nothing
       , oauthKey = Nothing
-      , accessToken = accessTokenFromLocation loc
+      , accessToken = tokenFromUrl
       , mdl = Material.model
       }
-  in
-    ( model
     , Cmd.batch
-      [ Material.init Mdl
-      , requestOAuthClientId ()
-      , case model.accessToken of
-          Nothing ->
-            requestOAuthAccessToken ()
-          Just t ->
-            setOAuthAccessToken (Just t)
-      ]
+        [ Material.init Mdl
+        , requestOAuthClientId ()
+        , case tokenFromUrl of
+            Nothing ->
+              -- try to read from localStorage instead
+              requestOAuthAccessToken ()
+            Just t ->
+              Cmd.batch
+                [ setOAuthAccessToken (Just t)
+                , queryTasklists t
+                ]
+        ]
     )
+
+queryTasklists : String -> Cmd Msg
+queryTasklists accessToken =
+  Http.send
+    (\result -> case result of
+        Ok listGTaskList ->
+          ReceiveQueryTasklists listGTaskList
+        Err e ->
+          Debug.crash "HTTP error while getting tasklists")
+    (Http.request
+      { method = "GET"
+      , headers =
+          [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+      , url = "https://www.googleapis.com/tasks/v1/users/@me/lists"
+      , body = Http.emptyBody
+      , expect = Http.expectJson Marshallers.listGTaskLists
+      , timeout = Nothing
+      , withCredentials = False
+      })
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -83,22 +105,7 @@ update msg model =
         Nothing ->
           Debug.crash "We need an OAuth access token to make requests"
         Just accessToken ->
-          (model, Http.send
-            (\result -> case result of
-                Ok listGTaskList ->
-                  ReceiveQueryTasklists listGTaskList
-                Err e ->
-                  Debug.crash "HTTP error while getting tasklists")
-            (Http.request
-              { method = "GET"
-              , headers =
-                  [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-              , url = "https://www.googleapis.com/tasks/v1/users/@me/lists"
-              , body = Http.emptyBody
-              , expect = Http.expectJson Marshallers.listGTaskLists
-              , timeout = Nothing
-              , withCredentials = False
-              }))
+          (model, queryTasklists accessToken)
     ReceiveQueryTasklists listGTaskLists ->
       ( { model | taskLists = Just <|
             List.map Models.fromGTaskList listGTaskLists.items }
@@ -143,8 +150,10 @@ update msg model =
       (model, requestOAuthClientId ())
     ReceiveOAuthClientId oauthKey ->
       ({ model | oauthKey = oauthKey }, Cmd.none)
-    ReceiveOAuthAccessToken t ->
-      ({ model | accessToken = t }, Cmd.none)
+    ReceiveOAuthAccessToken (Just t) ->
+      ( { model | accessToken = Just t }, queryTasklists t)
+    ReceiveOAuthAccessToken Nothing ->
+      ( { model | accessToken = Nothing}, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

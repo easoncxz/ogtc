@@ -11,6 +11,7 @@ import Random as R
 import Task
 import Time as T
 import Material
+import Material.Layout as Layout
 
 import Messages exposing (Msg(..))
 import Marshallers
@@ -89,6 +90,28 @@ queryTasklists accessToken =
       , withCredentials = False
       })
 
+queryTasks : String -> Models.ZTaskList -> Cmd Msg
+queryTasks accessToken zTaskList =
+  Http.send
+    (\result -> case result of
+        Ok listGTasks ->
+          ReceiveQueryTasks listGTasks
+        Err e ->
+          Debug.crash "HTTP error while getting tasks")
+    (Http.request
+      { method = "GET"
+      , headers =
+          [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
+      , url =
+          "https://www.googleapis.com/tasks/v1/lists/"
+          ++ zTaskList.meta.id
+          ++ "/tasks"
+      , body = Http.emptyBody
+      , expect = Http.expectJson Marshallers.listGTasks
+      , timeout = Nothing
+      , withCredentials = False
+      })
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -112,30 +135,20 @@ update msg model =
       , Cmd.none
       )
     SelectTaskList zTaskList ->
-      ( { model | currentTaskList = Just zTaskList }
-      , case model.accessToken of
-          Nothing ->
-            Debug.crash "We need an OAuth access token to make requests"
-          Just accessToken ->
-            Http.send
-              (\result -> case result of
-                  Ok listGTasks ->
-                    ReceiveQueryTasks listGTasks
-                  Err e ->
-                    Debug.crash "HTTP error while getting tasks")
-              (Http.request
-                { method = "GET"
-                , headers =
-                    [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-                , url =
-                    "https://www.googleapis.com/tasks/v1/lists/"
-                    ++ zTaskList.meta.id
-                    ++ "/tasks"
-                , body = Http.emptyBody
-                , expect = Http.expectJson Marshallers.listGTasks
-                , timeout = Nothing
-                , withCredentials = False
-                }))
+      let
+          (model_, cmd_) =
+            update (Layout.toggleDrawer Mdl) model
+      in
+        ( { model_ | currentTaskList = Just zTaskList }
+        , Cmd.batch
+            [ cmd_
+            , case model.accessToken of
+                Nothing ->
+                  Debug.crash "We need an OAuth access token to make requests"
+                Just accessToken ->
+                  queryTasks accessToken zTaskList
+            ]
+        )
     ReceiveQueryTasks listGTasks ->
       ( { model | currentTaskList =
             Maybe.map

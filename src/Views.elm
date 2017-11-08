@@ -9,8 +9,11 @@ import Html.Events as HE
 import Material
 import Material.Scheme as Scheme
 import Material.Layout as Layout
+import Material.Grid as Grid
 import Material.Options as Options
 import Material.Elevation as Elevation
+import Material.Textfield as Textfield
+import Material.Button as Button
 
 import Marshallers
 import Models exposing (Model, ZTaskList)
@@ -20,94 +23,104 @@ import OAuthHelpers exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =
-  Scheme.top <| viewLayout model
-
-viewLayout : Model -> H.Html Msg
-viewLayout model =
   Layout.render
     Messages.Mdl
     model.mdl
-    [ Layout.fixedHeader ]
-    { header =
-        [ Layout.row
-            [ Options.nop ]  -- styles
-            [ Layout.title
-              [ Options.nop ] -- styles
-              [ H.text "Header here!" ]
-            ]
-        ]
-    , drawer =
-        [ Layout.title [] [ H.text "Drawer title" ]
-        , Layout.navigation []
-            [ Layout.link [] [ H.text "one" ]
-            , Layout.link [] [ H.text "two" ]
-            , Layout.link [] [ H.text "three" ]
-            ]
-        ]
+    [ Layout.fixedHeader
+    , Layout.fixedDrawer
+    ]
+    { header = viewHeader model
+    , drawer = viewDrawer model
     , tabs = ([], [])
-    , main = [ viewMain model ]
+    , main = viewMain model
     }
+  |> Scheme.top   -- can be replaced with proper <link> elements
 
-boxed : H.Attribute m
+viewHeader : Model -> List (H.Html Msg)
+viewHeader model =
+  [ Layout.row []
+    [ Layout.title []
+        [ H.text "ogtc"
+        ]
+    ]
+  ]
+
+viewDrawer : Model -> List (H.Html Msg)
+viewDrawer model =
+  [ Layout.title [] [ H.text "Drawer title" ]
+  , Layout.navigation []
+      [ Layout.link [] [ H.text "one" ]
+      , Layout.link [] [ H.text "two" ]
+      , Layout.link [] [ H.text "three" ]
+      ]
+  ]
+
+boxed : List (Options.Style m)
 boxed =
-  HA.style
-    [ ("padding-left", "8%")
-    , ("padding-right", "8%")
-    , ("margin", "auto")
-    ]
+  [ Options.css "padding-left" "8%"
+  , Options.css "padding-right" "8%"
+  , Options.css "margin" "auto"
+  ]
 
-viewMain : Model -> H.Html Msg
+viewMain : Model -> List (H.Html Msg)
 viewMain model =
-  H.div
-    [ boxed ]
-    [ case model.accessToken of
-        Nothing ->
-          viewLoginPage model
-        Just token ->
-          viewMainPage model token
-    ]
+  [ case model.accessToken of
+      Nothing ->
+        viewLoginPage model
+      Just token ->
+        viewMainPage model token
+  ]
 
 viewLoginPage : Model -> H.Html Msg
 viewLoginPage model =
-  let
-    viewOAuthKeyInput =
-      H.div []
-        [ H.input
-            [ HE.onInput Messages.UpdateOAuthKey
-            , HA.value <|
-                case model.oauthKey of
-                  Nothing ->
-                    ""
-                  Just oauthKey ->
-                    oauthKey
+  Options.div
+    [ Options.many boxed ]
+    [ H.h1 []
+        [ H.text "Welcome to ogtc!" ]
+    , H.p []
+        [ H.text <|
+            "Ogtc is a Google Tasks client that runs in your browser. " ++
+            "To use ogtc, please supply a Google OAuth client id." ]
+    , H.div []
+        [ H.span []
+            [ Textfield.render Messages.Mdl [921238] model.mdl
+                [ Textfield.label "OAuth client id"
+                , Textfield.floatingLabel
+                , Textfield.text_
+                , Textfield.value <| Maybe.withDefault "" model.oauthKey
+                , Options.onInput Messages.UpdateOAuthKey
+                ]
+                []
             ]
-            [ H.text "OAuth client key" ]
-        , H.input
-            [ HA.type_ "button"
-            , HE.onClick <|
-                Messages.SetOAuthClientId model.oauthKey
-            , HA.value "save"
+        , Options.span [ Options.css "margin-left" "1em" ]
+            [ Button.render Messages.Mdl [776256] model.mdl
+              [ Button.colored
+              , Button.ripple
+              , Options.onClick <|
+                  Messages.SetOAuthClientId model.oauthKey
+              ]
+              [ H.text "save" ]
             ]
-            []
         ]
-    viewAuthoriseButton =
-      case model.oauthKey of
+    , case model.oauthKey of
         Nothing ->
-          H.p [] [ H.text
-          "We need an OAuth client key to initiate authorisation." ]
+          Button.render Messages.Mdl [888173] model.mdl
+            [ Button.raised
+            , Button.colored
+            , Button.ripple
+            , Button.disabled
+            ]
+            [ H.text "Authorise via Google OAuth" ]
         Just oauthKey ->
-          H.p [] [ H.a
-            [ HA.href <|
-              makeAuthorizeUrl
-              oauthKey
-              "https://localhost/index.html"
-              "state-here" ]
-            [ H.text "Authorise via Google OAuth" ] ]
-  in
-    H.div []
-      [ viewOAuthKeyInput
-      , viewAuthoriseButton
-      ]
+          Button.render Messages.Mdl [879123] model.mdl
+            [ Button.raised
+            , Button.colored
+            , Button.ripple
+            , Button.link <|
+                makeAuthorizeUrl oauthKey "https://localhost/index.html" "state-here"
+            ]
+            [ H.text "Authorise via Google OAuth" ]
+    ]
 
 viewMainPage : Model -> String -> H.Html Msg
 viewMainPage model accessToken =

@@ -130,9 +130,14 @@ viewLoginPage model =
 viewHomePage : Model -> String -> H.Html Msg
 viewHomePage model accessToken =
   Options.div [ Options.many boxed ]
-    [ H.h1 [] [ H.text "current task-list name" ]
-    , H.p [] [ H.text "Access token: " ]
-    , H.p [] [ H.text accessToken ]
+    [ H.h1 []
+        [ H.text <|
+            case model.currentTaskList of
+              Nothing ->
+                "No tasklist selected"
+              Just l ->
+                l.meta.title
+        ]
     , viewOneTaskList model.currentTaskList
     ]
 

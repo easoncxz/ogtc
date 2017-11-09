@@ -44,6 +44,15 @@ viewHeader : Model -> List (H.Html Msg)
 viewHeader model =
   [ Layout.row []
     [ Layout.title [] [ H.text "ogtc" ]
+    , Layout.spacer
+    , Layout.navigation [] <|
+        case model.page of
+          Models.AuthPage ->
+            []
+          Models.HomePage _ ->
+            [ Layout.link
+                [ Options.onClick (Messages.HomePageMsg Messages.Logout) ]
+                [ H.text "logout" ] ]
     ]
   ]
 

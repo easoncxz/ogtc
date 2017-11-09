@@ -159,7 +159,12 @@ update msg model =
         Models.HomePage { accessToken, taskLists, currentTaskList } ->
           case homeMsg of
             Logout ->
-              ( { model | page = Models.AuthPage }, setOAuthAccessToken Nothing )
+              ( { model | page = Models.AuthPage }
+              , Cmd.batch
+                  [ setOAuthAccessToken Nothing
+                  , Nav.newUrl "/"
+                  ]
+              )
             ReceiveQueryTasklists listGTaskLists ->
               ( { model
                 | page = Models.HomePage

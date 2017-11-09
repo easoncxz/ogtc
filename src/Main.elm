@@ -118,33 +118,25 @@ update msg model =
       (model, Cmd.none)
     Mdl msg_ ->
       Material.update Mdl msg_ model
-    ReceiveOAuthClientId maybeCid ->
-      case maybeCid of
-        Nothing ->
-          (model, Cmd.none)
-        Just cid ->
-          ({ model | oauthClientId = cid }, Cmd.none)
+    UpdateOAuthClientId id ->
+      ({ model | oauthClientId = id }, setOAuthClientId (Just id))
     AuthPageMsg authMsg ->
       case model.page of
         Models.HomePage _ ->
           (model, Cmd.none)
         Models.AuthPage ->
           case authMsg of
-            UpdateOAuthClientId cid ->
-              ({ model | oauthClientId = cid }, Cmd.none)
-            ReceiveOAuthAccessToken maybeToken ->
-              case maybeToken of
-                Nothing ->
-                  (model, Cmd.none)
-                Just t ->
-                  ( { model | page = Models.HomePage
-                      { accessToken = t
-                      , taskLists = Nothing
-                      , currentTaskList = Nothing
-                      }
-                    }
-                  , queryTasklists t
-                  )
+            ReceiveOAuthAccessToken Nothing ->
+              (model, Cmd.none)
+            ReceiveOAuthAccessToken (Just t) ->
+              ( { model | page = Models.HomePage
+                  { accessToken = t
+                  , taskLists = Nothing
+                  , currentTaskList = Nothing
+                  }
+                }
+              , queryTasklists t
+              )
     HomePageMsg homeMsg ->
       case model.page of
         Models.AuthPage ->
@@ -207,6 +199,11 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     [ Material.subscriptions Mdl model
-    , receiveOAuthClientId ReceiveOAuthClientId
+    , receiveOAuthClientId <| \maybeId ->
+        case maybeId of
+          Nothing ->
+            NoOp
+          Just id ->
+            UpdateOAuthClientId id
     , Sub.map AuthPageMsg <| receiveOAuthAccessToken ReceiveOAuthAccessToken
     ]

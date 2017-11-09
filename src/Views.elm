@@ -101,8 +101,7 @@ viewLoginPage model =
                 , Textfield.floatingLabel
                 , Textfield.text_
                 , Textfield.value model.oauthClientId
-                , Options.onInput <|
-                    (Messages.AuthPageMsg << Messages.UpdateOAuthClientId)
+                , Options.onInput Messages.UpdateOAuthClientId
                 ]
                 []
             ]

@@ -9,13 +9,12 @@ import Marshallers
 type Msg
   = NoOp
   | Mdl (Material.Msg Msg)
-  | ReceiveOAuthClientId (Maybe String)
+  | UpdateOAuthClientId String
   | AuthPageMsg AuthPageMsg
   | HomePageMsg HomePageMsg
 
 type AuthPageMsg
-  = UpdateOAuthClientId String
-  | ReceiveOAuthAccessToken (Maybe String)
+  = ReceiveOAuthAccessToken (Maybe String)
 
 type HomePageMsg
   = Logout

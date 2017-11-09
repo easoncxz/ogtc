@@ -168,14 +168,20 @@ update msg model =
               , Cmd.none
               )
             SelectTaskList zl ->
-              ( { model | page = Models.HomePage
-                    { accessToken = accessToken
-                    , taskLists = taskLists
-                    , currentTaskList = Just zl.meta.id
-                    }
-                }
-              , queryTasks accessToken zl
-              )
+              let
+                (model_, cmd) = update (Layout.toggleDrawer Mdl) model
+              in
+                ( { model_ | page = Models.HomePage
+                      { accessToken = accessToken
+                      , taskLists = taskLists
+                      , currentTaskList = Just zl.meta.id
+                      }
+                  }
+                , Cmd.batch
+                    [ cmd
+                    , queryTasks accessToken zl
+                    ]
+                )
             ReceiveQueryTasks listId listGTasks ->
               ( { model | page = Models.HomePage
                     { accessToken = accessToken

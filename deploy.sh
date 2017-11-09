@@ -14,4 +14,4 @@ rm -rfv "$DIST_DIR"
 mkdir "$DIST_DIR"
 cp extras.js index.html "$DIST_DIR"
 
-elm-make src/Main.elm --output "$DIST_DIR"/elm-bundle.js
+elm-make src/Main.elm --output "$DIST_DIR"/elm-bundle.js --yes

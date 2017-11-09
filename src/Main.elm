@@ -41,7 +41,20 @@ onLocationChange = UpdateLocation
 
 init : Nav.Location -> (Model, Cmd Msg)
 init loc =
-  let
+  if loc.protocol /= "https:" then
+    ( { mdl = Material.model
+      , oauthClientId = ""
+      , page = Models.AuthPage
+      , location = loc
+      } -- whatever, really
+    , Nav.load
+        <| "https://"
+        ++ loc.hostname
+        ++ loc.port_
+        ++ loc.pathname
+        ++ loc.hash
+    )
+  else let
     (page, cmd) =
       case accessTokenFromLocation loc of
         Nothing ->

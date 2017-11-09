@@ -8,3 +8,6 @@ tests/elm-stuff/
 
 # priate information
 example-data/
+
+# Build output; directory to serve over HTTP
+_dist/

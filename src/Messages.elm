@@ -1,6 +1,7 @@
 
 module Messages exposing (..)
 
+import Navigation
 import Material
 
 import Models exposing (ZTaskList)
@@ -10,6 +11,7 @@ type Msg
   = NoOp
   | Mdl (Material.Msg Msg)
   | UpdateOAuthClientId String
+  | UpdateLocation Navigation.Location
   | AuthPageMsg AuthPageMsg
   | HomePageMsg HomePageMsg
 

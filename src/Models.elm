@@ -20,6 +20,7 @@ type alias Model =
   { mdl : Material.Model
   , oauthClientId : String
   , page : AppPage
+  , location : Nav.Location
   }
 
 type alias ZTaskList =

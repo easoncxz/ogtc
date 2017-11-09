@@ -37,8 +37,7 @@ main = Nav.program
   }
 
 onLocationChange : Nav.Location -> Msg
-onLocationChange _ = NoOp
-
+onLocationChange = UpdateLocation
 
 init : Nav.Location -> (Model, Cmd Msg)
 init loc =
@@ -62,6 +61,7 @@ init loc =
     ( { mdl = Material.model
       , oauthClientId = ""
       , page = page
+      , location = loc
       }
     , Cmd.batch
         [ Material.init Mdl
@@ -120,6 +120,8 @@ update msg model =
       Material.update Mdl msg_ model
     UpdateOAuthClientId id ->
       ({ model | oauthClientId = id }, setOAuthClientId (Just id))
+    UpdateLocation loc ->
+      ({ model | location = loc }, Cmd.none)
     AuthPageMsg authMsg ->
       case model.page of
         Models.HomePage _ ->

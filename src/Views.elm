@@ -121,7 +121,10 @@ viewLoginPage model =
             , Button.colored
             , Button.ripple
             , Button.link <|
-                makeAuthorizeUrl cid "https://localhost/index.html" "state-here"
+                makeAuthorizeUrl
+                  cid
+                  (model.location.origin ++ "/index.html")
+                  "state-here"
             ]
             [ H.text "Authorise via Google OAuth" ]
     ]

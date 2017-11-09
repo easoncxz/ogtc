@@ -6,13 +6,20 @@ import Navigation as Nav
 
 import Marshallers exposing (GTask, GTaskList)
 
+type AppPage
+  = AuthPage
+  | HomePage HomePageModel
+
+type alias HomePageModel =
+  { accessToken : String
+  , taskLists  : Maybe (List ZTaskList)
+  , currentTaskList : Maybe String
+  }
+
 type alias Model =
-  { taskLists  : Maybe (List ZTaskList)
-  , currentTaskList : Maybe ZTaskList
-  , currentTask : Maybe GTask
-  , oauthKey : Maybe String
-  , accessToken : Maybe String
-  , mdl : Material.Model
+  { mdl : Material.Model
+  , oauthClientId : String
+  , page : AppPage
   }
 
 type alias ZTaskList =
@@ -25,3 +32,14 @@ fromGTaskList gTaskList =
   { meta = gTaskList
   , tasks = Nothing
   }
+
+findZTaskListById : Maybe String -> Maybe (List ZTaskList) -> Maybe ZTaskList
+findZTaskListById maybeListId maybeTaskLists =
+  case (maybeListId, maybeTaskLists) of
+    (Just id, Just lists) ->
+      List.head <|
+        List.filter
+          (\l -> l.meta.id == id)
+          lists
+    _ ->
+      Nothing

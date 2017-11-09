@@ -27,7 +27,11 @@ view model =
     Messages.Mdl
     model.mdl
     [ Layout.fixedHeader
-    , Layout.fixedDrawer
+    , case model.page of
+        Models.AuthPage ->
+          Options.nop
+        Models.HomePage _ ->
+          Layout.fixedDrawer
     ]
     { header = viewHeader model
     , drawer = viewDrawer model
@@ -46,18 +50,22 @@ viewHeader model =
 viewTasklistTitle : ZTaskList -> H.Html Msg
 viewTasklistTitle l =
   Layout.link
-    [ Options.onClick (Messages.SelectTaskList l) ]
+    [ Options.onClick (Messages.HomePageMsg <| Messages.SelectTaskList l) ]
     [ H.text l.meta.title ]
 
 viewDrawer : Model -> List (H.Html Msg)
 viewDrawer model =
   [ Layout.title [] [ H.text "Task lists" ]
   , Layout.navigation [] <|
-      case model.taskLists of
-        Nothing ->
-          [ Layout.link [] [ H.text "Loading tasklists..." ] ]
-        Just taskLists ->
-          List.map viewTasklistTitle taskLists
+      case model.page of
+        Models.AuthPage ->
+          []
+        Models.HomePage { taskLists } ->
+          case taskLists of
+            Nothing ->
+              [ Layout.link [] [ H.text "Loading tasklists..." ] ]
+            Just lists ->
+              List.map viewTasklistTitle lists
   ]
 
 boxed : List (Options.Style m)
@@ -69,11 +77,11 @@ boxed =
 
 viewMain : Model -> List (H.Html Msg)
 viewMain model =
-  [ case model.accessToken of
-      Nothing ->
+  [ case model.page of
+      Models.AuthPage ->
         viewLoginPage model
-      Just token ->
-        viewHomePage model token
+      Models.HomePage m ->
+        viewHomePage model m
   ]
 
 viewLoginPage : Model -> H.Html Msg
@@ -92,23 +100,15 @@ viewLoginPage model =
                 [ Textfield.label "OAuth client id"
                 , Textfield.floatingLabel
                 , Textfield.text_
-                , Textfield.value <| Maybe.withDefault "" model.oauthKey
-                , Options.onInput Messages.UpdateOAuthKey
+                , Textfield.value model.oauthClientId
+                , Options.onInput <|
+                    (Messages.AuthPageMsg << Messages.UpdateOAuthClientId)
                 ]
                 []
             ]
-        , Options.span [ Options.css "margin-left" "1em" ]
-            [ Button.render Messages.Mdl [776256] model.mdl
-              [ Button.colored
-              , Button.ripple
-              , Options.onClick <|
-                  Messages.SetOAuthClientId model.oauthKey
-              ]
-              [ H.text "save" ]
-            ]
         ]
-    , case model.oauthKey of
-        Nothing ->
+    , case model.oauthClientId of
+        "" ->
           Button.render Messages.Mdl [888173] model.mdl
             [ Button.raised
             , Button.colored
@@ -116,29 +116,29 @@ viewLoginPage model =
             , Button.disabled
             ]
             [ H.text "Authorise via Google OAuth" ]
-        Just oauthKey ->
+        cid ->
           Button.render Messages.Mdl [879123] model.mdl
             [ Button.raised
             , Button.colored
             , Button.ripple
             , Button.link <|
-                makeAuthorizeUrl oauthKey "https://localhost/index.html" "state-here"
+                makeAuthorizeUrl cid "https://localhost/index.html" "state-here"
             ]
             [ H.text "Authorise via Google OAuth" ]
     ]
 
-viewHomePage : Model -> String -> H.Html Msg
-viewHomePage model accessToken =
+viewHomePage : Model -> Models.HomePageModel -> H.Html Msg
+viewHomePage model { accessToken, taskLists, currentTaskList } =
   Options.div [ Options.many boxed ]
     [ H.h1 []
         [ H.text <|
-            case model.currentTaskList of
+            case Models.findZTaskListById currentTaskList taskLists of
               Nothing ->
                 "No tasklist selected"
-              Just l ->
-                l.meta.title
+              Just list ->
+                list.meta.title
         ]
-    , viewOneTaskList model.currentTaskList
+    , viewOneTaskList <| Models.findZTaskListById currentTaskList taskLists
     ]
 
 

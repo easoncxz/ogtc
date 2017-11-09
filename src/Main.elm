@@ -13,7 +13,7 @@ import Time as T
 import Material
 import Material.Layout as Layout
 
-import Messages exposing (Msg(..))
+import Messages exposing (Msg(..), HomePageMsg(..), AuthPageMsg(..))
 import Marshallers
 import Models exposing (Model)
 import OAuthHelpers exposing (accessTokenFromLocation)
@@ -37,37 +37,36 @@ main = Nav.program
   }
 
 onLocationChange : Nav.Location -> Msg
-onLocationChange loc =
-  case accessTokenFromLocation loc of
-    Just t ->
-      UpdateAccessToken t
-    Nothing ->
-      NoOp
+onLocationChange _ = NoOp
+
 
 init : Nav.Location -> (Model, Cmd Msg)
 init loc =
   let
-    tokenFromUrl = accessTokenFromLocation loc
+    (page, cmd) =
+      case accessTokenFromLocation loc of
+        Nothing ->
+          (Models.AuthPage, requestOAuthAccessToken ())
+        Just t ->
+          ( Models.HomePage
+              { accessToken = t
+              , taskLists = Nothing
+              , currentTaskList = Nothing
+              }
+          , Cmd.batch
+              [ setOAuthAccessToken (Just t)
+              , queryTasklists t
+              ]
+          )
   in
-    ( { taskLists = Nothing
-      , currentTaskList = Nothing
-      , currentTask = Nothing
-      , oauthKey = Nothing
-      , accessToken = tokenFromUrl
-      , mdl = Material.model
+    ( { mdl = Material.model
+      , oauthClientId = ""
+      , page = page
       }
     , Cmd.batch
         [ Material.init Mdl
         , requestOAuthClientId ()
-        , case tokenFromUrl of
-            Nothing ->
-              -- try to read from localStorage instead
-              requestOAuthAccessToken ()
-            Just t ->
-              Cmd.batch
-                [ setOAuthAccessToken (Just t)
-                , queryTasklists t
-                ]
+        , cmd
         ]
     )
 
@@ -76,7 +75,7 @@ queryTasklists accessToken =
   Http.send
     (\result -> case result of
         Ok listGTaskList ->
-          ReceiveQueryTasklists listGTaskList
+          HomePageMsg <| ReceiveQueryTasklists listGTaskList
         Err e ->
           Debug.crash "HTTP error while getting tasklists")
     (Http.request
@@ -95,7 +94,7 @@ queryTasks accessToken zTaskList =
   Http.send
     (\result -> case result of
         Ok listGTasks ->
-          ReceiveQueryTasks listGTasks
+          HomePageMsg <| ReceiveQueryTasks zTaskList.meta.id listGTasks
         Err e ->
           Debug.crash "HTTP error while getting tasks")
     (Http.request
@@ -119,59 +118,89 @@ update msg model =
       (model, Cmd.none)
     Mdl msg_ ->
       Material.update Mdl msg_ model
-    UpdateOAuthKey k ->
-      ({ model | oauthKey = Just k }, Cmd.none)
-    UpdateAccessToken t ->
-      ({ model | accessToken = Just t }, Cmd.none)
-    QueryTasklists ->
-      case model.accessToken of
+    ReceiveOAuthClientId maybeCid ->
+      case maybeCid of
         Nothing ->
-          Debug.crash "We need an OAuth access token to make requests"
-        Just accessToken ->
-          (model, queryTasklists accessToken)
-    ReceiveQueryTasklists listGTaskLists ->
-      ( { model | taskLists = Just <|
-            List.map Models.fromGTaskList listGTaskLists.items }
-      , Cmd.none
-      )
-    SelectTaskList zTaskList ->
-      let
-          (model_, cmd_) =
-            update (Layout.toggleDrawer Mdl) model
-      in
-        ( { model_ | currentTaskList = Just zTaskList }
-        , Cmd.batch
-            [ cmd_
-            , case model.accessToken of
+          (model, Cmd.none)
+        Just cid ->
+          ({ model | oauthClientId = cid }, Cmd.none)
+    AuthPageMsg authMsg ->
+      case model.page of
+        Models.HomePage _ ->
+          (model, Cmd.none)
+        Models.AuthPage ->
+          case authMsg of
+            UpdateOAuthClientId cid ->
+              ({ model | oauthClientId = cid }, Cmd.none)
+            ReceiveOAuthAccessToken maybeToken ->
+              case maybeToken of
                 Nothing ->
-                  Debug.crash "We need an OAuth access token to make requests"
-                Just accessToken ->
-                  queryTasks accessToken zTaskList
-            ]
-        )
-    ReceiveQueryTasks listGTasks ->
-      ( { model | currentTaskList =
-            Maybe.map
-              (\curr ->
-                { curr | tasks = Just listGTasks.items })
-              model.currentTaskList }
-      , Cmd.none
-      )
-    SetOAuthClientId oauthKey ->
-      (model, setOAuthClientId oauthKey)
-    RequestOAuthClientId ->
-      (model, requestOAuthClientId ())
-    ReceiveOAuthClientId oauthKey ->
-      ({ model | oauthKey = oauthKey }, Cmd.none)
-    ReceiveOAuthAccessToken (Just t) ->
-      ( { model | accessToken = Just t }, queryTasklists t)
-    ReceiveOAuthAccessToken Nothing ->
-      ( { model | accessToken = Nothing}, Cmd.none)
+                  (model, Cmd.none)
+                Just t ->
+                  ( { model | page = Models.HomePage
+                      { accessToken = t
+                      , taskLists = Nothing
+                      , currentTaskList = Nothing
+                      }
+                    }
+                  , queryTasklists t
+                  )
+    HomePageMsg homeMsg ->
+      case model.page of
+        Models.AuthPage ->
+          (model, Cmd.none)
+        Models.HomePage { accessToken, taskLists, currentTaskList } ->
+          case homeMsg of
+            Logout ->
+              ( { model | page = Models.AuthPage }, setOAuthAccessToken Nothing )
+            ReceiveQueryTasklists listGTaskLists ->
+              ( { model
+                | page = Models.HomePage
+                    { accessToken = accessToken
+                    , taskLists =
+                        Just <|
+                          List.map
+                            Models.fromGTaskList
+                            listGTaskLists.items
+                    , currentTaskList = Nothing
+                    }
+                }
+              , Cmd.none
+              )
+            SelectTaskList zl ->
+              ( { model | page = Models.HomePage
+                    { accessToken = accessToken
+                    , taskLists = taskLists
+                    , currentTaskList = Just zl.meta.id
+                    }
+                }
+              , queryTasks accessToken zl
+              )
+            ReceiveQueryTasks listId listGTasks ->
+              ( { model | page = Models.HomePage
+                    { accessToken = accessToken
+                    , taskLists =
+                        Maybe.map
+                          (\ls ->
+                            List.map (\l ->
+                                if l.meta.id == listId then
+                                  { l | tasks = Just listGTasks.items }
+                                else
+                                  l
+                            )
+                            ls
+                          )
+                          taskLists
+                    , currentTaskList = currentTaskList
+                    }
+                }
+              , Cmd.none
+              )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     [ Material.subscriptions Mdl model
     , receiveOAuthClientId ReceiveOAuthClientId
-    , receiveOAuthAccessToken ReceiveOAuthAccessToken
+    , Sub.map AuthPageMsg <| receiveOAuthAccessToken ReceiveOAuthAccessToken
     ]

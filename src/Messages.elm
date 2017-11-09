@@ -1,23 +1,26 @@
 
 module Messages exposing (..)
 
-import Time as T
-import Navigation as Nav
 import Material
 
-import Models exposing (..)
+import Models exposing (ZTaskList)
 import Marshallers
 
 type Msg
   = NoOp
-  | UpdateOAuthKey String
-  | UpdateAccessToken String
-  | QueryTasklists
+  | Mdl (Material.Msg Msg)
+  | ReceiveOAuthClientId (Maybe String)
+  | AuthPageMsg AuthPageMsg
+  | HomePageMsg HomePageMsg
+
+type AuthPageMsg
+  = UpdateOAuthClientId String
+  | ReceiveOAuthAccessToken (Maybe String)
+
+type HomePageMsg
+  = Logout
   | ReceiveQueryTasklists Marshallers.ListGTaskLists
   | SelectTaskList ZTaskList
-  | ReceiveQueryTasks Marshallers.ListGTasks
-  | SetOAuthClientId (Maybe String)
-  | RequestOAuthClientId
-  | ReceiveOAuthClientId (Maybe String)
-  | ReceiveOAuthAccessToken (Maybe String)
-  | Mdl (Material.Msg Msg)
+  | ReceiveQueryTasks
+      String  -- tasklist id
+      Marshallers.ListGTasks

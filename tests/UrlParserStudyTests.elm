@@ -7,9 +7,8 @@ import UrlParser as U
 import UrlParser exposing ((</>), (<?>))
 import Navigation exposing (Location)
 
-import ZongGoogleOAuthParsers exposing
-    ( parseFragment
-    )
+import OAuthHelpers exposing
+    ( parseFragment )
 
 importantSample =
     { href = "http://localhost:8000/src/Main.elm#access_token=abc"

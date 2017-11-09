@@ -1,0 +1,31 @@
+
+sudo: false
+
+language: node_js
+node_js:
+  - "6.10"
+
+cache:
+  directories:
+    - elm-stuff/build-artifacts/
+    - elm-stuff/packages/
+    - tests/elm-stuff/build-artifacts/
+    - tests/elm-stuff/packages/
+    - sysconfcpus
+
+install:
+  - npm -g install elm@'>=0.18 <0.19'
+  - npm -g install elm-test@'>=0.18 <0.19'
+  # Faster compile on Travis; https://www.npmjs.com/package/elm-test
+  - |
+    if [ ! -d sysconfcpus/bin ]
+    then
+      git clone https://github.com/obmarg/libsysconfcpus.git
+      pushd libsysconfcpus
+      ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus
+      make && make install
+      popd
+    fi
+
+script:
+  - $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-test

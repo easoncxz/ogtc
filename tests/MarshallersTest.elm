@@ -1,4 +1,3 @@
-
 module MarshallersTest exposing (..)
 
 import Date
@@ -6,8 +5,7 @@ import Json.Decode as JD
 import Test exposing (..)
 import Expect
 
-import Models exposing (TaskStatus(..))
-import Marshallers as Ms
+import Marshallers as Ms exposing (TaskStatus(..))
 
 all : Test
 all = describe "Marshallers"
@@ -48,7 +46,7 @@ all = describe "Marshallers"
               "position": "pos-abcd",
               "notes": "notes here",
               "status": "needsAction"
-  }
+            }
           """
         in
           case JD.decodeString Ms.gTask real of
@@ -60,6 +58,7 @@ all = describe "Marshallers"
                   (List.map
                     ((|>) gtask)
                     [ \t -> t.id == "my-id"
+                    , \t -> t.etag /= Nothing
                     , \t -> t.parent /= Nothing
                     , \t -> t.status == NeedsAction
                     , \t -> (Date.month t.updated == Date.Aug)
@@ -68,7 +67,9 @@ all = describe "Marshallers"
                     ]))
             Err e ->
               Expect.fail (toString e)
-      , test "decode a ListGTasks" <| \() ->
+      ]
+    , describe "ListGTasks decoder"
+      [ test "decode a ListGTasks" <| \() ->
         let
           real =
             """
@@ -79,7 +80,6 @@ all = describe "Marshallers"
                  {
                    "kind": "tasks#task",
                    "id": "task id",
-                   "etag": "another etag",
                    "title": "task to do",
                    "updated": "2016-11-25T01:03:25.000Z",
                    "selfLink": "https://www.googleapis.com/tasks/v1/lists/list-id/task/task-id",
@@ -103,6 +103,64 @@ all = describe "Marshallers"
                   ])
             Err e ->
               Expect.fail (toString e)
+      ]
+    , describe "GTaskList decoder"
+      [ test "one real value" <| \() ->
+        let
+          real = """{
+            "kind": "tasks#taskList",
+            "id": "some-tasklist-id",
+            "title": "some-title",
+            "updated": "2017-05-26T15:18:49.000Z",
+            "selfLink": "https://www.googleapis.com/tasks/v1/users/@me/lists/some-tasklist-id"
+          }"""
+        in
+          case JD.decodeString Ms.gTaskList real of
+            Ok tl ->
+              Expect.true
+                "some prop didn't hold"
+                (List.all
+                  ((|>) tl)
+                  [ \tl -> tl.id == "some-tasklist-id"
+                  , \tl -> tl.etag == Nothing
+                  ])
+            Err e ->
+              Expect.fail (toString e)
+      ]
+    , describe "value enforcement" <|
+      let
+        good = "good"
+        beGood s = s == good
+      in
+        [ test "rejection" <| \() ->
+          case JD.decodeString
+            (JD.string |> JD.andThen (Ms.must beGood))
+            """\"not that good\"""" of
+            Ok _ ->
+              Expect.fail "It should've been rejected"
+            Err reason ->
+              Expect.true "the error message doesn't match" <|
+                (reason |> String.contains good) &&
+                (reason |> String.contains "not acceptable")
+        , test "acceptance" <| \() ->
+          Expect.equal
+            (Ok "good")
+            (JD.decodeString
+              (JD.string |> JD.andThen (Ms.must beGood))
+              """\"good\"""")
+        ]
+    , describe "decoding datetime"
+      [ test "simple case" <| \() ->
+        case JD.decodeString
+          Ms.date
+          "\"2016-11-25T01:03:25.000Z\"" of
+            Ok d ->
+              Expect.equal
+                (Date.month d)
+                Date.Nov
+            Err msg ->
+              Expect.fail "it shouldn't have failed"
+
       ]
     ]
   ]

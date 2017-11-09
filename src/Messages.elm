@@ -1,21 +1,25 @@
 
 module Messages exposing (..)
 
-import Navigation as Nav
+import Material
 
-import Models exposing (..)
+import Models exposing (ZTaskList)
+import Marshallers
 
 type Msg
   = NoOp
-  | CreateTaskList String
-  | DeleteTaskList ZTaskListId
-  | SwitchToTaskList ZTaskListId
-  | CreateTask String
-  | DeleteTask ZTaskId
-  | UpdateTaskListPrompt String
-  | UpdateTaskPrompt String
-  | UpdateOAuthKey String
-  | UpdateOAuthSecret String
-  | UpdateLocation Nav.Location
-  | UpdateNextUrl String
-  | UpdateAccessToken String
+  | Mdl (Material.Msg Msg)
+  | UpdateOAuthClientId String
+  | AuthPageMsg AuthPageMsg
+  | HomePageMsg HomePageMsg
+
+type AuthPageMsg
+  = ReceiveOAuthAccessToken (Maybe String)
+
+type HomePageMsg
+  = Logout
+  | ReceiveQueryTasklists Marshallers.ListGTaskLists
+  | SelectTaskList ZTaskList
+  | ReceiveQueryTasks
+      String  -- tasklist id
+      Marshallers.ListGTasks

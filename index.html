@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro);
+      html, head, body {
+        margin: 0;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #9A9A9A; font-family: &#39;Source Sans Pro&#39;;">
+      <div style="font-size: 3em;">Building your project!</div>
+      <img src="/_reactor/waiting.gif">
+      <div style="font-size: 1em">With new projects, I need a bunch of extra time to download packages.</div>
+    </div>
+  </body>
+
+  <script type="text/javascript" src="/_compile/src/Main.elm"></script>
+  <script src="/elm-bundle.js"></script> <!-- this will fail in development -->
+
+  <script src="extras.js"></script>
+  <script type="text/javascript">
+    while (document.body.firstChild) {
+      // https://stackoverflow.com/a/41366859/1349048
+            document.body.removeChild(document.body.firstChild);
+    }
+
+    let app
+    try {
+      // https://github.com/elm-lang/elm-reactor/issues/138#issuecomment-257984481
+      app = Elm.Main.fullscreen()
+      loadExtras(app);
+    } catch (e) {
+      // this will run in case there are compile errors:
+      var stylesheets = document.querySelectorAll('link')
+      for (var i = 0; i < stylesheets.length; i++) {
+        stylesheets[i].parentNode.removeChild(stylesheets[i])
+      }
+      runElmProgram()
+    }
+  </script>
+
+</html>

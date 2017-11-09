@@ -1,7 +1,13 @@
 
-module ZongGoogleOAuthParsers exposing (..)
+module OAuthHelpers exposing
+  ( accessTokenFromLocation
+  , makeAuthorizeUrl
+  -- Tests:
+  , parseFragment
+  )
 
 import String
+import Navigation exposing (Location)
 
 maybeToPair : List a -> Maybe (a, a)
 maybeToPair xs =
@@ -51,4 +57,22 @@ parseFragment fragment =
           Nothing
         Just (Just (k, token)) ->
           Just token
+
+accessTokenFromLocation : Location -> Maybe String
+accessTokenFromLocation l = parseFragment l.hash
+
+type alias OAuthKey = String
+type alias OAuthUrl = String
+type alias OAuthState = String
+
+makeAuthorizeUrl : OAuthKey -> OAuthUrl -> OAuthState -> String
+makeAuthorizeUrl oauthKey url state =
+    ("https://accounts.google.com/o/oauth2/v2/auth"
+    ++ "?response_type=" ++ "token"
+    ++ "&client_id="     ++ oauthKey
+    ++ "&redirect_uri="  ++ url
+    ++ "&scope="         ++ "https://www.googleapis.com/auth/tasks"
+    ++ "&state="         ++ state
+    ++ "&prompt="        ++ "none"
+    )
 

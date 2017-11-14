@@ -5,7 +5,9 @@ import Json.Decode as JD
 import Test exposing (..)
 import Expect
 
-import Marshallers as Ms exposing (TaskStatus(..))
+import DecoderHelpers as DH
+import GoogleTasks.Models exposing (TaskStatus(..))
+import GoogleTasks.Decoders as Ms
 
 all : Test
 all = describe "Marshallers"
@@ -134,7 +136,7 @@ all = describe "Marshallers"
       in
         [ test "rejection" <| \() ->
           case JD.decodeString
-            (JD.string |> JD.andThen (Ms.must beGood))
+            (JD.string |> JD.andThen (DH.must beGood))
             """\"not that good\"""" of
             Ok _ ->
               Expect.fail "It should've been rejected"
@@ -146,13 +148,13 @@ all = describe "Marshallers"
           Expect.equal
             (Ok "good")
             (JD.decodeString
-              (JD.string |> JD.andThen (Ms.must beGood))
+              (JD.string |> JD.andThen (DH.must beGood))
               """\"good\"""")
         ]
     , describe "decoding datetime"
       [ test "simple case" <| \() ->
         case JD.decodeString
-          Ms.date
+          DH.date
           "\"2016-11-25T01:03:25.000Z\"" of
             Ok d ->
               Expect.equal

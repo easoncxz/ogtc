@@ -4,7 +4,7 @@ module Models exposing (..)
 import Material
 import Navigation as Nav
 
-import Marshallers exposing (GTask, GTaskList)
+import GoogleTasks.Models exposing (GTask, GTaskList)
 
 type AppPage
   = AuthPage

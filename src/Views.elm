@@ -15,7 +15,6 @@ import Material.Elevation as Elevation
 import Material.Textfield as Textfield
 import Material.Button as Button
 
-import Marshallers
 import Models exposing (Model, ZTaskList)
 import Messages
 import Messages exposing (Msg)
@@ -170,7 +169,6 @@ viewOneTaskList taskListMaybe =
                 "Tasks in " ++ taskList.meta.title ++ ":" ]
             , H.ul [] <|
                 let
-                  viewTaskTitle : Marshallers.GTask -> H.Html Msg
                   viewTaskTitle t =
                     H.li [] [ H.text t.title ]
                 in

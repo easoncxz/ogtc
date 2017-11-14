@@ -5,7 +5,7 @@ import Navigation
 import Material
 
 import Models exposing (ZTaskList)
-import Marshallers
+import GoogleTasks.Models as GoogleModels
 
 type Msg
   = NoOp
@@ -20,8 +20,8 @@ type AuthPageMsg
 
 type HomePageMsg
   = Logout
-  | ReceiveQueryTasklists Marshallers.ListGTaskLists
+  | ReceiveQueryTasklists GoogleModels.ListGTaskLists
   | SelectTaskList ZTaskList
   | ReceiveQueryTasks
       String  -- tasklist id
-      Marshallers.ListGTasks
+      GoogleModels.ListGTasks

@@ -1,37 +1,29 @@
 
-module Marshallers exposing (..)
+module GoogleTasks.Decoders exposing
+  ( taskStatus
+  , gTask
+  , gTaskList
+  , gTaskLink
+  , listGTasks
+  , listGTaskLists
+  )
 
 import Date exposing (Date)
 import Json.Decode as JD exposing
   (Decoder, field, string, int, field, bool)
-import Json.Decode.Pipeline as JDP exposing (required, optional)
+import Json.Decode.Pipeline as JDP exposing
+  (required, optional)
 
--- | A Json.Decode.Pipeline -compatible decoder that has the
--- same semantics as Json.Decode.maybe
-maybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
-maybe key decoder =
-  optional key (JD.map Just decoder) Nothing
-
-must : (a -> Bool) -> a -> Decoder a
-must isAcceptable a =
-  if a |> isAcceptable then
-    JD.succeed a
-  else
-    JD.fail ("The value (" ++ toString a ++
-      ") is considered not acceptable here")
-
-date : Decoder Date
-date =
-  let
-    dateFromString : String -> Decoder Date
-    dateFromString s =
-      case Date.fromString s of
-        Ok d ->
-          JD.succeed d
-        Err msg ->
-          JD.fail msg
-  in
-    JD.string |> JD.andThen dateFromString
+import GoogleTasks.Models exposing
+  ( TaskStatus(..)
+  , GTask
+  , GTaskList
+  , GTaskLink
+  , ListGTasks
+  , ListGTaskLists
+  )
+import DecoderHelpers exposing
+  ( must, maybe, date )
 
 taskStatus : String -> Decoder TaskStatus
 taskStatus s =
@@ -98,54 +90,3 @@ listGTaskLists =
     |> maybe "etag" string
     |> maybe "nextPageToken" string
     |> required "items" (JD.list gTaskList)
-
-type TaskStatus
-  = NeedsAction
-  | Completed
-
-type alias GTaskLink =
-  { type_       : String
-  , description : String
-  , link        : String
-  }
-
-type alias GTask =
-  { kind      : String
-  , id        : String
-  , etag      : Maybe String
-  , title     : String
-  , updated   : Date
-  , selfLink  : String
-  , parent    : Maybe String
-  , position  : String
-  , notes     : Maybe String
-  , status    : TaskStatus
-  , due       : Maybe Date
-  , completed : Maybe Date
-  , deleted   : Bool
-  , hidden    : Bool
-  , links     : Maybe (List GTaskLink)
-  }
-
-type alias ListGTasks =
-  { kind          : String
-  , etag          : Maybe String
-  , nextPageToken : Maybe String
-  , items         : List GTask
-  }
-
-type alias GTaskList =
-  { kind     : String
-  , id       : String
-  , etag     : Maybe String
-  , title    : String
-  , selfLink : String
-  , updated  : Date
-  }
-
-type alias ListGTaskLists =
-  { kind          : String
-  , etag          : Maybe String
-  , nextPageToken : Maybe String
-  , items         : List GTaskList
-  }

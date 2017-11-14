@@ -1,11 +1,11 @@
 
 module Views exposing (..)
 
-import Date
 import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
+import Time.DateTime as DT exposing (DateTime)
 import Material
 import Material.Scheme as Scheme
 import Material.Layout as Layout
@@ -147,14 +147,6 @@ viewHomePage model { taskLists, currentTaskList } =
       Options.div [ Options.many boxed ]
         [ H.h1 [] [ H.text tl.meta.title ]
         , H.code [] [ H.text <| "Updated: " ++ (toString tl.meta.updated) ]
-        , H.p [] [ H.text <|
-            "The hour is: " ++ toString (Date.hour tl.meta.updated)
-            ++ "\n"
-            ++ "Hour: " ++ toString
-              (Result.withDefault -1
-                (Result.map Date.hour
-                  (Date.fromString "2017-11-14T08:15:38.092Z")))
-          ]
         , viewOneTaskList (Just tl)
         ]
 

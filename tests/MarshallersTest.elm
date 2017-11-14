@@ -1,8 +1,8 @@
 module MarshallersTest exposing (..)
 
-import Date
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
+import Time.DateTime as DT
 import Test exposing (..)
 import Expect
 
@@ -68,8 +68,8 @@ all = describe "Marshallers"
                     , \t -> t.etag /= Nothing
                     , \t -> t.parent /= Nothing
                     , \t -> t.status == NeedsAction
-                    , \t -> (Date.month t.updated == Date.Aug)
-                    , \t -> (Date.second t.updated == 23)
+                    , \t -> (DT.month t.updated == 8)
+                    , \t -> (DT.second t.updated == 23)
                     -- no timezone considerations here yet
                     ]))
             Err e ->
@@ -140,9 +140,7 @@ all = describe "Marshallers"
           DH.date
           "\"2016-11-25T01:03:25.000Z\"" of
             Ok d ->
-              Expect.equal
-                (Date.month d)
-                Date.Nov
+              Expect.equal 11 (DT.month d)
             Err msg ->
               Expect.fail "it shouldn't have failed"
 

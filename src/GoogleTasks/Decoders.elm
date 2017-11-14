@@ -8,7 +8,6 @@ module GoogleTasks.Decoders exposing
   , listGTaskLists
   )
 
-import Date exposing (Date)
 import Json.Decode as JD exposing
   (Decoder, field, string, int, field, bool)
 import Json.Decode.Pipeline as JDP exposing

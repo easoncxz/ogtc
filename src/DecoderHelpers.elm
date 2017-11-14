@@ -5,7 +5,7 @@ module DecoderHelpers exposing
   , date
   )
 
-import Date exposing (Date)
+import Time.DateTime as DT exposing (DateTime)
 
 import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline as JDP
@@ -26,12 +26,12 @@ must isAcceptable a =
     JD.fail ("The value (" ++ toString a ++
       ") is considered not acceptable here")
 
-date : Decoder Date
+date : Decoder DateTime
 date =
   let
-    dateFromString : String -> Decoder Date
+    dateFromString : String -> Decoder DateTime
     dateFromString s =
-      case Date.fromString s of
+      case DT.fromISO8601 s of
         Ok d ->
           JD.succeed d
         Err msg ->

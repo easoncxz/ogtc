@@ -1,15 +1,13 @@
 
 port module Main exposing (main)
 
-import Date as D
+import Date
 import Debug
 import Dict exposing (Dict)
 import Http
 import Json.Decode as JD
 import Navigation as Nav
-import Random as R
 import Task
-import Time as T
 import Material
 import Material.Layout as Layout
 

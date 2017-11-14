@@ -8,7 +8,7 @@ module GoogleTasks.Models exposing
   , ListGTaskLists
   )
 
-import Date exposing (Date)
+import Time.DateTime as DT exposing (DateTime)
 
 type TaskStatus
   = NeedsAction
@@ -25,14 +25,14 @@ type alias GTask =
   , id        : String
   , etag      : Maybe String
   , title     : String
-  , updated   : Date
+  , updated   : DateTime
   , selfLink  : String
   , parent    : Maybe String
   , position  : String
   , notes     : Maybe String
   , status    : TaskStatus
-  , due       : Maybe Date
-  , completed : Maybe Date
+  , due       : Maybe DateTime
+  , completed : Maybe DateTime
   , deleted   : Bool
   , hidden    : Bool
   , links     : Maybe (List GTaskLink)
@@ -51,7 +51,7 @@ type alias GTaskList =
   , etag     : Maybe String
   , title    : String
   , selfLink : String
-  , updated  : Date
+  , updated  : DateTime
   }
 
 type alias ListGTaskLists =

@@ -14,11 +14,12 @@ import Material
 import Material.Layout as Layout
 
 import GoogleTasks.Decoders as Marshallers
-import Models exposing (Model)
+import GoogleTasks.RestApi as Api
 import OAuth.Models exposing (Token, bearerToken)
 import OAuth.Authorization exposing (accessTokenFromLocation)
 import OAuth.Http as OHttp
 
+import Models exposing (Model)
 import Messages exposing (Msg(..), HomePageMsg(..), AuthPageMsg(..))
 import Views exposing (view)
 
@@ -96,10 +97,7 @@ queryTasklists token =
           let
             _ = Debug.log "HTTP error while getting tasklists" e
           in HomePageMsg Logout)
-    (OHttp.get
-      token
-      "https://www.googleapis.com/tasks/v1/users/@me/lists"
-      Marshallers.listGTaskLists)
+    (Api.taskListsApi token).list
 
 queryTasks : Token -> Models.ZTaskList -> Cmd Msg
 queryTasks token zTaskList =
@@ -111,12 +109,7 @@ queryTasks token zTaskList =
           let
             _ = Debug.log "HTTP error while getting tasks" e
           in HomePageMsg Logout)
-    (OHttp.get
-      token
-      ("https://www.googleapis.com/tasks/v1/lists/"
-        ++ zTaskList.meta.id
-        ++ "/tasks")
-      Marshallers.listGTasks)
+    ((Api.tasksApi token).list zTaskList.meta.id)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =

@@ -138,7 +138,7 @@ viewLoginPage model =
     ]
 
 viewHomePage : Model -> Models.HomePageModel -> H.Html Msg
-viewHomePage model { accessToken, taskLists, currentTaskList } =
+viewHomePage model { taskLists, currentTaskList } =
   Options.div [ Options.many boxed ]
     [ H.h1 []
         [ H.text <|

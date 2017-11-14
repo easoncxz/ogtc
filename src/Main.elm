@@ -14,7 +14,7 @@ import Material
 import Material.Layout as Layout
 
 import GoogleTasks.Decoders as Marshallers
-import GoogleTasks.RestApi as Api
+import GoogleTasks.RestApi as RestApi
 import OAuth.Models exposing (Token, bearerToken)
 import OAuth.Authorization exposing (accessTokenFromLocation)
 import OAuth.Http as OHttp
@@ -64,16 +64,19 @@ init loc =
         Nothing ->
           (Models.AuthPage, requestOAuthAccessToken ())
         Just t ->
-          ( Models.HomePage
-              { accessToken = t
+          let
+            api = RestApi.makeClient (bearerToken t)
+          in
+            ( Models.HomePage
+              { api = api
               , taskLists = Nothing
               , currentTaskList = Nothing
               }
-          , Cmd.batch
+            , Cmd.batch
               [ setOAuthAccessToken (Just t)
-              , queryTasklists (bearerToken t)
+              , queryTasklists api
               ]
-          )
+            )
   in
     ( { mdl = Material.model
       , oauthClientId = ""
@@ -87,8 +90,8 @@ init loc =
         ]
     )
 
-queryTasklists : Token -> Cmd Msg
-queryTasklists token =
+queryTasklists : RestApi.Client -> Cmd Msg
+queryTasklists api =
   Http.send
     (\result -> case result of
         Ok listGTaskList ->
@@ -97,10 +100,10 @@ queryTasklists token =
           let
             _ = Debug.log "HTTP error while getting tasklists" e
           in HomePageMsg Logout)
-    (Api.taskListsApi token).list
+    api.taskLists.list
 
-queryTasks : Token -> Models.ZTaskList -> Cmd Msg
-queryTasks token zTaskList =
+queryTasks : RestApi.Client -> Models.ZTaskList -> Cmd Msg
+queryTasks api zTaskList =
   Http.send
     (\result -> case result of
         Ok listGTasks ->
@@ -109,7 +112,7 @@ queryTasks token zTaskList =
           let
             _ = Debug.log "HTTP error while getting tasks" e
           in HomePageMsg Logout)
-    ((Api.tasksApi token).list zTaskList.meta.id)
+    (api.tasks.list zTaskList.meta.id)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -131,19 +134,21 @@ update msg model =
             ReceiveOAuthAccessToken Nothing ->
               (model, Cmd.none)
             ReceiveOAuthAccessToken (Just t) ->
-              ( { model | page = Models.HomePage
-                  { accessToken = t
-                  , taskLists = Nothing
-                  , currentTaskList = Nothing
+              let api = RestApi.makeClient (bearerToken t)
+              in
+                ( { model | page = Models.HomePage
+                    { api = api
+                    , taskLists = Nothing
+                    , currentTaskList = Nothing
+                    }
                   }
-                }
-              , queryTasklists (bearerToken t)
-              )
+                , queryTasklists api
+                )
     HomePageMsg homeMsg ->
       case model.page of
         Models.AuthPage ->
           (model, Cmd.none)
-        Models.HomePage { accessToken, taskLists, currentTaskList } ->
+        Models.HomePage { api, taskLists, currentTaskList } ->
           case homeMsg of
             Logout ->
               ( { model | page = Models.AuthPage }
@@ -155,7 +160,7 @@ update msg model =
             ReceiveQueryTasklists listGTaskLists ->
               ( { model
                 | page = Models.HomePage
-                    { accessToken = accessToken
+                    { api = api
                     , taskLists =
                         Just <|
                           List.map
@@ -171,19 +176,19 @@ update msg model =
                 (model_, cmd) = update (Layout.toggleDrawer Mdl) model
               in
                 ( { model_ | page = Models.HomePage
-                      { accessToken = accessToken
+                      { api = api
                       , taskLists = taskLists
                       , currentTaskList = Just zl.meta.id
                       }
                   }
                 , Cmd.batch
                     [ cmd
-                    , queryTasks (bearerToken accessToken) zl
+                    , queryTasks api zl
                     ]
                 )
             ReceiveQueryTasks listId listGTasks ->
               ( { model | page = Models.HomePage
-                    { accessToken = accessToken
+                    { api = api
                     , taskLists =
                         Maybe.map
                           (\ls ->

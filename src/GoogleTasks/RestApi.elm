@@ -17,23 +17,37 @@ import GoogleTasks.Models exposing
 
 type alias TaskListsApi =
   { list : Request ListGTaskLists
+  -- , more
   }
 
-taskListsApi : Token -> TaskListsApi
-taskListsApi token =
+type alias TasksApi =
+  { list : String -> Request ListGTasks
+  -- , more
+  }
+
+type alias Client =
+  { taskLists : TaskListsApi
+  , tasks : TasksApi
+  }
+
+makeClient : Token -> Client
+makeClient token =
+  { taskLists = makeTaskListsApi token
+  , tasks = makeTasksApi token
+  }
+
+makeTaskListsApi : Token -> TaskListsApi
+makeTaskListsApi token =
   { list =
       OHttp.get
         token
         "https://www.googleapis.com/tasks/v1/users/@me/lists"
         GDecoders.listGTaskLists
+  -- , more
   }
 
-type alias TasksApi =
-  { list : String -> Request ListGTasks
-  }
-
-tasksApi : Token -> TasksApi
-tasksApi token =
+makeTasksApi : Token -> TasksApi
+makeTasksApi token =
   { list = \taskListId ->
       OHttp.get
         token
@@ -41,4 +55,5 @@ tasksApi token =
           ++ {- Http.encodeUri -} taskListId
           ++ "/tasks")
         GDecoders.listGTasks
+  -- , more
   }

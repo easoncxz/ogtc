@@ -5,13 +5,14 @@ import Material
 import Navigation as Nav
 
 import GoogleTasks.Models exposing (GTask, GTaskList)
+import GoogleTasks.RestApi as RestApi
 
 type AppPage
   = AuthPage
   | HomePage HomePageModel
 
 type alias HomePageModel =
-  { accessToken : String
+  { api : RestApi.Client
   , taskLists  : Maybe (List ZTaskList)
   , currentTaskList : Maybe String
   }

@@ -139,17 +139,24 @@ viewLoginPage model =
 
 viewHomePage : Model -> Models.HomePageModel -> H.Html Msg
 viewHomePage model { taskLists, currentTaskList } =
-  Options.div [ Options.many boxed ]
-    [ H.h1 []
-        [ H.text <|
-            case Models.findZTaskListById currentTaskList taskLists of
-              Nothing ->
-                "No tasklist selected"
-              Just list ->
-                list.meta.title
+  case Models.findZTaskListById currentTaskList taskLists of
+    Nothing ->
+      Options.div [ Options.many boxed ]
+        [ H.h1 [] [ H.text "No tasklist selected" ] ]
+    Just tl ->
+      Options.div [ Options.many boxed ]
+        [ H.h1 [] [ H.text tl.meta.title ]
+        , H.code [] [ H.text <| "Updated: " ++ (toString tl.meta.updated) ]
+        , H.p [] [ H.text <|
+            "The hour is: " ++ toString (Date.hour tl.meta.updated)
+            ++ "\n"
+            ++ "Hour: " ++ toString
+              (Result.withDefault -1
+                (Result.map Date.hour
+                  (Date.fromString "2017-11-14T08:15:38.092Z")))
+          ]
+        , viewOneTaskList (Just tl)
         ]
-    , viewOneTaskList <| Models.findZTaskListById currentTaskList taskLists
-    ]
 
 
 viewOneTaskList : Maybe ZTaskList -> H.Html Msg

@@ -93,7 +93,9 @@ queryTasklists token =
         Ok listGTaskList ->
           HomePageMsg <| ReceiveQueryTasklists listGTaskList
         Err e ->
-          Debug.crash "HTTP error while getting tasklists")
+          let
+            _ = Debug.log "HTTP error while getting tasklists" e
+          in HomePageMsg Logout)
     (OHttp.get
       token
       "https://www.googleapis.com/tasks/v1/users/@me/lists"
@@ -106,7 +108,9 @@ queryTasks token zTaskList =
         Ok listGTasks ->
           HomePageMsg <| ReceiveQueryTasks zTaskList.meta.id listGTasks
         Err e ->
-          Debug.crash "HTTP error while getting tasks")
+          let
+            _ = Debug.log "HTTP error while getting tasks" e
+          in HomePageMsg Logout)
     (OHttp.get
       token
       ("https://www.googleapis.com/tasks/v1/lists/"

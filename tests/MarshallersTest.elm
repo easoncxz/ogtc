@@ -197,6 +197,23 @@ all = describe "Marshallers"
             Err e ->
               Expect.fail (toString e)
         ]
+      , describe "date"
+        [ test "respect ISO-8601 timezone marker" <| \() ->
+            let
+              utcStr = "\"2017-11-14T05:55:24.675Z\""
+              localStr = "\"2017-11-14T18:55:24.675+13:00\""
+              -- ISO-8601 support seems flaky. "+13" doesn't work
+            in
+              case JD.decodeString DH.date utcStr of
+                Ok utc ->
+                  case JD.decodeString DH.date localStr of
+                    Ok local ->
+                      Expect.equal utc local
+                    Err e ->
+                      Expect.fail e
+                Err e ->
+                  Expect.fail e
+        ]
       ]
     ]
   ]

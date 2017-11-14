@@ -2,12 +2,17 @@ module MarshallersTest exposing (..)
 
 import Date
 import Json.Decode as JD
+import Json.Decode.Pipeline as JDP
 import Test exposing (..)
 import Expect
 
 import DecoderHelpers as DH
 import GoogleTasks.Models exposing (TaskStatus(..))
 import GoogleTasks.Decoders as Ms
+
+type alias TestPerson =
+  { lastName : Maybe String
+  }
 
 all : Test
 all = describe "Marshallers"
@@ -129,28 +134,6 @@ all = describe "Marshallers"
             Err e ->
               Expect.fail (toString e)
       ]
-    , describe "value enforcement" <|
-      let
-        good = "good"
-        beGood s = s == good
-      in
-        [ test "rejection" <| \() ->
-          case JD.decodeString
-            (JD.string |> JD.andThen (DH.must beGood))
-            """\"not that good\"""" of
-            Ok _ ->
-              Expect.fail "It should've been rejected"
-            Err reason ->
-              Expect.true "the error message doesn't match" <|
-                (reason |> String.contains good) &&
-                (reason |> String.contains "not acceptable")
-        , test "acceptance" <| \() ->
-          Expect.equal
-            (Ok "good")
-            (JD.decodeString
-              (JD.string |> JD.andThen (DH.must beGood))
-              """\"good\"""")
-        ]
     , describe "decoding datetime"
       [ test "simple case" <| \() ->
         case JD.decodeString
@@ -163,6 +146,57 @@ all = describe "Marshallers"
             Err msg ->
               Expect.fail "it shouldn't have failed"
 
+      ]
+    , describe "DecoderHelpers"
+      [ describe "must"
+        [ test "rejection" <| \() ->
+          case JD.decodeString
+            (JD.string |> JD.andThen (DH.must ((==) "good")))
+            """\"not that good\"""" of
+            Ok _ ->
+              Expect.fail "It should've been rejected"
+            Err reason ->
+              Expect.true "the error message doesn't match" <|
+                (reason |> String.contains "good") &&
+                (reason |> String.contains "not acceptable")
+        , test "acceptance" <| \() ->
+          Expect.equal
+            (Ok "good")
+            (JD.decodeString
+              (JD.string |> JD.andThen (DH.must ((==) "good")))
+              """\"good\"""")
+        ]
+      , describe "maybe"
+        [ test "there is right" <| \() ->
+          case JD.decodeString
+                (JDP.decode TestPerson
+                  |> DH.maybe "lastName" JD.string)
+                """{"lastName": "Doe"}""" of
+            Ok person ->
+              Expect.equal
+                person.lastName
+                (Just "Doe")
+            Err e ->
+              Expect.fail (toString e)
+        , test "there is something wrong" <| \() ->
+          case JD.decodeString
+                (JDP.decode TestPerson
+                  |> DH.maybe "lastName" JD.string)
+                """{"lastName": 123}""" of
+            Ok person ->
+              Expect.fail "decode should error-out but didn't"
+            Err e ->
+              Expect.pass
+        , test "there is nothing, as allowed" <| \() ->
+          case JD.decodeString
+                (JDP.decode TestPerson
+                  |> DH.maybe "lastName" JD.string)
+                """{}""" of
+            Ok person ->
+              Expect.equal Nothing person.lastName
+            Err e ->
+              Expect.fail (toString e)
+        ]
       ]
     ]
   ]

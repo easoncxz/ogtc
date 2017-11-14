@@ -1,5 +1,6 @@
 module MarshallersTest exposing (..)
 
+import Json.Encode as JE
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Time.DateTime as DT
@@ -8,7 +9,9 @@ import Expect
 
 import DecoderHelpers as DH
 import GoogleTasks.Models exposing (TaskStatus(..))
+import GoogleTasks.Encoders as Encoders
 import GoogleTasks.Decoders as Ms
+import GoogleTasks.Decoders as Decoders
 
 type alias TestPerson =
   { lastName : Maybe String
@@ -213,6 +216,33 @@ all = describe "Marshallers"
                   Expect.fail e
         ]
       ]
+    ]
+  , describe "GTask encoder"
+    [ test "`(dec ->) enc -> dec -> enc` gives the same thing" <| \() ->
+      let
+        real = """{
+ "kind": "tasks#task",
+ "id": "ApparentlyUpperAndLowerCaseAscii",
+ "etag": "\\"ThisReallyHas/SlashesAndBackSlashes\\"",
+ "title": "Answer Myrtle!",
+ "updated": "2017-10-04T15:51:01.000Z",
+ "selfLink": "(some URL that mentions the IDs above)",
+ "position": "00000000000005473837",
+ "status": "completed",
+ "due": "2017-07-29T00:00:00.000Z",
+ "completed": "2017-10-04T15:50:53.000Z"
+}"""  -- omitting `deleted` and `hidden`
+      in case JD.decodeString Decoders.gTask real of
+          Err e ->
+            Expect.fail e
+          Ok gTask ->
+            case JD.decodeString Decoders.gTask <|
+                JE.encode 0 <|
+                Encoders.gTask gTask of
+              Err e ->
+                Expect.fail e
+              Ok gTaskAgain ->
+                Expect.equal gTask gTaskAgain
     ]
   ]
 

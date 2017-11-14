@@ -5,6 +5,7 @@ import Dom
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
+import Json.Encode as JE
 import Time.DateTime as DT exposing (DateTime)
 import Material
 import Material.Scheme as Scheme
@@ -19,6 +20,7 @@ import Models exposing (Model, ZTaskList)
 import Messages
 import Messages exposing (Msg)
 import OAuth.Authorization exposing (makeAuthorizeUrl)
+import GoogleTasks.Encoders as GEncoders
 
 view : Model -> H.Html Msg
 view model =
@@ -146,7 +148,13 @@ viewHomePage model { taskLists, currentTaskList } =
     Just tl ->
       Options.div [ Options.many boxed ]
         [ H.h1 [] [ H.text tl.meta.title ]
-        , H.code [] [ H.text <| "Updated: " ++ (toString tl.meta.updated) ]
+        , H.pre [] [ H.text
+            (JE.encode 2
+              (Maybe.withDefault JE.null
+                (Maybe.map GEncoders.gTask
+                  (List.head
+                    (Maybe.withDefault [] tl.tasks)))))
+          ]
         , viewOneTaskList (Just tl)
         ]
 

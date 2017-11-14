@@ -16,7 +16,7 @@ import Material.Layout as Layout
 import Messages exposing (Msg(..), HomePageMsg(..), AuthPageMsg(..))
 import GoogleTasks.Decoders as Marshallers
 import Models exposing (Model)
-import OAuthHelpers exposing (accessTokenFromLocation)
+import OAuth.Authorization exposing (accessTokenFromLocation)
 import Views exposing (view)
 
 port setOAuthClientId : Maybe String -> Cmd a

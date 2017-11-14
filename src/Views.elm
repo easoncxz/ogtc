@@ -18,7 +18,7 @@ import Material.Button as Button
 import Models exposing (Model, ZTaskList)
 import Messages
 import Messages exposing (Msg)
-import OAuthHelpers exposing (makeAuthorizeUrl)
+import OAuth.Authorization exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =

@@ -88,6 +88,13 @@ init loc =
         ]
     )
 
+initHomePage : RestApi.Client -> Models.HomePageModel
+initHomePage api =
+  { api = api
+  , taskLists = Nothing
+  , currentTaskList = Nothing
+  }
+
 queryTasklists : RestApi.Client -> Cmd Msg
 queryTasklists api =
   Http.send
@@ -117,12 +124,17 @@ getTaskList api id =
   Http.send
     (\result -> case result of
       Ok gTaskList ->
-        HomePageMsg <| GotTaskList id gTaskList
+        -- HomePageMsg <| ??? id gTaskList
+        Debug.log "getTaskList??" NoOp
       Err e ->
         Debug.log
           (toString e)
           (HomePageMsg Logout))
     (api.get id)
+
+mapListWhere : (a -> Bool) -> (a -> a) -> List a -> List a
+mapListWhere p f xs =
+  List.map (\x -> if p x then f x else x) xs
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -137,28 +149,24 @@ update msg model =
       ({ model | location = loc }, Cmd.none)
     AuthPageMsg authMsg ->
       case model.page of
-        Models.HomePage _ ->
-          (model, Cmd.none)
         Models.AuthPage ->
           case authMsg of
             ReceiveOAuthAccessToken Nothing ->
               (model, Cmd.none)
             ReceiveOAuthAccessToken (Just t) ->
-              let api = RestApi.makeClient (bearerToken t)
+              let
+                api = RestApi.makeClient (bearerToken t)
               in
-                ( { model | page = Models.HomePage
-                    { api = api
-                    , taskLists = Nothing
-                    , currentTaskList = Nothing
-                    }
+                ( { model | page =
+                      Models.HomePage <| initHomePage api
                   }
                 , queryTasklists api
                 )
+        _ ->
+          (model, Cmd.none)
     HomePageMsg homeMsg ->
       case model.page of
-        Models.AuthPage ->
-          (model, Cmd.none)
-        Models.HomePage { api, taskLists, currentTaskList } ->
+        Models.HomePage ({ api, taskLists, currentTaskList } as page) ->
           case homeMsg of
             Logout ->
               ( { model | page = Models.AuthPage }
@@ -168,16 +176,11 @@ update msg model =
                   ]
               )
             ReceiveQueryTasklists listGTaskLists ->
-              ( { model
-                | page = Models.HomePage
-                    { api = api
-                    , taskLists =
-                        Just <|
-                          List.map
-                            Models.fromGTaskList
-                            listGTaskLists.items
-                    , currentTaskList = Nothing
-                    }
+              ( { model | page = Models.HomePage
+                  { page | taskLists =
+                    Just <|
+                      List.map Models.fromGTaskList listGTaskLists.items
+                  }
                 }
               , Cmd.none
               )
@@ -186,46 +189,24 @@ update msg model =
                 (model_, cmd) = update (Layout.toggleDrawer Mdl) model
               in
                 ( { model_ | page = Models.HomePage
-                      { api = api
-                      , taskLists = taskLists
-                      , currentTaskList = Just zl.meta.id
-                      }
-                  }
+                    { page | currentTaskList = Just zl.meta.id } }
                 , Cmd.batch
-                    [ cmd
-                    , queryTasks api zl
-                    , getTaskList api.taskLists zl.meta.id
-                    ]
+                    [ cmd , queryTasks api zl ]
                 )
             ReceiveQueryTasks listId listGTasks ->
               ( { model | page = Models.HomePage
-                    { api = api
-                    , taskLists =
-                        Maybe.map
-                          (\ls ->
-                            List.map (\l ->
-                                if l.meta.id == listId then
-                                  { l | tasks = Just listGTasks.items }
-                                else
-                                  l
-                            )
-                            ls
-                          )
-                          taskLists
-                    , currentTaskList = currentTaskList
-                    }
+                  { page | taskLists =
+                    Maybe.map
+                      (mapListWhere
+                        (.meta >> .id >> ((==) listId))
+                        (\l -> { l | tasks = Just listGTasks.items }))
+                      taskLists
+                  }
                 }
               , Cmd.none
               )
-            GotTaskList id gTaskList ->
-              ( { model | page = Models.HomePage
-                    { api = api
-                    , taskLists = taskLists
-                    , currentTaskList = Just gTaskList.id
-                    }
-                }
-              , Cmd.none
-              )
+        _ ->
+          (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

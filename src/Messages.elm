@@ -20,7 +20,6 @@ type AuthPageMsg
 
 type HomePageMsg
   = Logout
-  | GotTaskList String GoogleModels.GTaskList
   | ReceiveQueryTasklists GoogleModels.ListGTaskLists
   | SelectTaskList ZTaskList
   | ReceiveQueryTasks

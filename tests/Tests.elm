@@ -2,15 +2,15 @@ module Tests exposing (..)
 
 import Test exposing (..)
 
-import UrlParserStudyTests
-import JsonCoding
-import MarshallersTest
 import DateTimeTests
+import GoogleTasks.EncoderTests as GEnc
+import GoogleTasks.DecoderTests as GDec
+import OAuth.AuthorizationTests as OAuthAuth
 
 all : Test
 all = describe "All tests to be run"
-  [ UrlParserStudyTests.all
-  , JsonCoding.all
-  , MarshallersTest.all
-  , DateTimeTests.all
+  [ DateTimeTests.all
+  , GEnc.all
+  , GDec.all
+  , OAuthAuth.all
   ]

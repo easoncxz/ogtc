@@ -1,5 +1,5 @@
 
-module DecoderHelpers exposing
+module Decoders exposing
   ( must
   , maybe
   , date

@@ -14,7 +14,7 @@ import Material.Layout as Layout
 import GoogleTasks.Decoders as Marshallers
 import GoogleTasks.RestApi as RestApi
 import OAuth.Models exposing (Token, bearerToken)
-import OAuth.Authorization exposing (accessTokenFromLocation)
+import OAuth.Authorization exposing (parseFragment)
 import OAuth.Http as OHttp
 
 import Models exposing (Model)
@@ -58,7 +58,7 @@ init loc =
     )
   else let
     (page, cmd) =
-      case accessTokenFromLocation loc of
+      case parseFragment loc.hash of
         Nothing ->
           (Models.AuthPage, requestOAuthAccessToken ())
         Just t ->

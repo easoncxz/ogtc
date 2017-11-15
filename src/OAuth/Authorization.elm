@@ -1,8 +1,6 @@
 
 module OAuth.Authorization exposing
-  ( accessTokenFromLocation
-  , makeAuthorizeUrl
-  -- Tests:
+  ( makeAuthorizeUrl
   , parseFragment
   )
 

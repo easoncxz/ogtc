@@ -21,7 +21,7 @@ import GoogleTasks.Models exposing
   , ListGTasks
   , ListGTaskLists
   )
-import DecoderHelpers exposing
+import Decoders exposing
   ( must, maybe, date )
 
 taskStatus : String -> Decoder TaskStatus

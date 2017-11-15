@@ -15,11 +15,10 @@ import Material.Elevation as Elevation
 import Material.Textfield as Textfield
 import Material.Button as Button
 
-import Marshallers
 import Models exposing (Model, ZTaskList)
 import Messages
 import Messages exposing (Msg)
-import OAuthHelpers exposing (makeAuthorizeUrl)
+import OAuth.Authorization exposing (makeAuthorizeUrl)
 
 view : Model -> H.Html Msg
 view model =
@@ -44,6 +43,15 @@ viewHeader : Model -> List (H.Html Msg)
 viewHeader model =
   [ Layout.row []
     [ Layout.title [] [ H.text "ogtc" ]
+    , Layout.spacer
+    , Layout.navigation [] <|
+        case model.page of
+          Models.AuthPage ->
+            []
+          Models.HomePage _ ->
+            [ Layout.link
+                [ Options.onClick (Messages.HomePageMsg Messages.Logout) ]
+                [ H.text "logout" ] ]
     ]
   ]
 
@@ -161,7 +169,6 @@ viewOneTaskList taskListMaybe =
                 "Tasks in " ++ taskList.meta.title ++ ":" ]
             , H.ul [] <|
                 let
-                  viewTaskTitle : Marshallers.GTask -> H.Html Msg
                   viewTaskTitle t =
                     H.li [] [ H.text t.title ]
                 in

@@ -7,7 +7,7 @@ import UrlParser as U
 import UrlParser exposing ((</>), (<?>))
 import Navigation exposing (Location)
 
-import OAuthHelpers exposing
+import OAuth.Authorization exposing
     ( parseFragment )
 
 importantSample =

@@ -13,10 +13,13 @@ import Time as T
 import Material
 import Material.Layout as Layout
 
-import Messages exposing (Msg(..), HomePageMsg(..), AuthPageMsg(..))
-import Marshallers
+import GoogleTasks.Decoders as Marshallers
 import Models exposing (Model)
-import OAuthHelpers exposing (accessTokenFromLocation)
+import OAuth.Models exposing (Token, bearerToken)
+import OAuth.Authorization exposing (accessTokenFromLocation)
+import OAuth.Http as OHttp
+
+import Messages exposing (Msg(..), HomePageMsg(..), AuthPageMsg(..))
 import Views exposing (view)
 
 port setOAuthClientId : Maybe String -> Cmd a
@@ -67,7 +70,7 @@ init loc =
               }
           , Cmd.batch
               [ setOAuthAccessToken (Just t)
-              , queryTasklists t
+              , queryTasklists (bearerToken t)
               ]
           )
   in
@@ -83,46 +86,37 @@ init loc =
         ]
     )
 
-queryTasklists : String -> Cmd Msg
-queryTasklists accessToken =
+queryTasklists : Token -> Cmd Msg
+queryTasklists token =
   Http.send
     (\result -> case result of
         Ok listGTaskList ->
           HomePageMsg <| ReceiveQueryTasklists listGTaskList
         Err e ->
-          Debug.crash "HTTP error while getting tasklists")
-    (Http.request
-      { method = "GET"
-      , headers =
-          [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-      , url = "https://www.googleapis.com/tasks/v1/users/@me/lists"
-      , body = Http.emptyBody
-      , expect = Http.expectJson Marshallers.listGTaskLists
-      , timeout = Nothing
-      , withCredentials = False
-      })
+          let
+            _ = Debug.log "HTTP error while getting tasklists" e
+          in HomePageMsg Logout)
+    (OHttp.get
+      token
+      "https://www.googleapis.com/tasks/v1/users/@me/lists"
+      Marshallers.listGTaskLists)
 
-queryTasks : String -> Models.ZTaskList -> Cmd Msg
-queryTasks accessToken zTaskList =
+queryTasks : Token -> Models.ZTaskList -> Cmd Msg
+queryTasks token zTaskList =
   Http.send
     (\result -> case result of
         Ok listGTasks ->
           HomePageMsg <| ReceiveQueryTasks zTaskList.meta.id listGTasks
         Err e ->
-          Debug.crash "HTTP error while getting tasks")
-    (Http.request
-      { method = "GET"
-      , headers =
-          [ Http.header "Authorization" ("Bearer " ++ accessToken) ]
-      , url =
-          "https://www.googleapis.com/tasks/v1/lists/"
-          ++ zTaskList.meta.id
-          ++ "/tasks"
-      , body = Http.emptyBody
-      , expect = Http.expectJson Marshallers.listGTasks
-      , timeout = Nothing
-      , withCredentials = False
-      })
+          let
+            _ = Debug.log "HTTP error while getting tasks" e
+          in HomePageMsg Logout)
+    (OHttp.get
+      token
+      ("https://www.googleapis.com/tasks/v1/lists/"
+        ++ zTaskList.meta.id
+        ++ "/tasks")
+      Marshallers.listGTasks)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -150,7 +144,7 @@ update msg model =
                   , currentTaskList = Nothing
                   }
                 }
-              , queryTasklists t
+              , queryTasklists (bearerToken t)
               )
     HomePageMsg homeMsg ->
       case model.page of
@@ -159,7 +153,12 @@ update msg model =
         Models.HomePage { accessToken, taskLists, currentTaskList } ->
           case homeMsg of
             Logout ->
-              ( { model | page = Models.AuthPage }, setOAuthAccessToken Nothing )
+              ( { model | page = Models.AuthPage }
+              , Cmd.batch
+                  [ setOAuthAccessToken Nothing
+                  , Nav.newUrl "/"
+                  ]
+              )
             ReceiveQueryTasklists listGTaskLists ->
               ( { model
                 | page = Models.HomePage
@@ -186,7 +185,7 @@ update msg model =
                   }
                 , Cmd.batch
                     [ cmd
-                    , queryTasks accessToken zl
+                    , queryTasks (bearerToken accessToken) zl
                     ]
                 )
             ReceiveQueryTasks listId listGTasks ->

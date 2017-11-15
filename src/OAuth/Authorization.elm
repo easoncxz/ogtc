@@ -1,5 +1,5 @@
 
-module OAuthHelpers exposing
+module OAuth.Authorization exposing
   ( accessTokenFromLocation
   , makeAuthorizeUrl
   -- Tests:

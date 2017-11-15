@@ -3,7 +3,7 @@ module GoogleTasks.Encoders exposing (..)
 
 import Json.Encode as JE
 
-import Encoders
+import Encoders as Enc
 import GoogleTasks.Models exposing
   ( TaskStatus(..)
   , GTask
@@ -31,111 +31,49 @@ gTaskLink l =
 
 gTask : GTask -> JE.Value
 gTask t =
-  JE.object <|
-    [ ("kind", JE.string t.kind)
-    , ("id", JE.string t.id)
-    ] ++
-    (case t.etag of
-      Nothing ->
-        []
-      Just e ->
-        [ ("etag", JE.string e) ]
-    ) ++
-    [ ("title", JE.string t.title)
-    , ("updated", Encoders.date t.updated)
-    , ("selfLink", JE.string t.selfLink)
-    ] ++
-    (case t.parent of
-      Nothing ->
-        []
-      Just id ->
-        [ ("parent", JE.string id) ]
-    ) ++
-    [ ("position", JE.string t.position)
-    ] ++
-    (case t.notes of
-      Nothing ->
-        []
-      Just n ->
-        [ ("notes", JE.string n) ]
-    ) ++
-    [ ("status", taskStatus t.status)
-    ] ++
-    (case t.due of
-      Nothing ->
-        []
-      Just d ->
-        [ ("due", Encoders.date d) ]
-    ) ++
-    (case t.completed of
-      Nothing ->
-        []
-      Just d ->
-        [ ("completed", Encoders.date d) ]
-    ) ++
-    [ ("deleted", JE.bool t.deleted)
-    , ("hidden", JE.bool t.hidden)
-    ] ++
-    (case t.links of
-      Nothing ->
-        []
-      Just links ->
-        [ ("links", JE.list (List.map gTaskLink links)) ]
-    )
+  Enc.object <|
+    [ Enc.justaField "kind" JE.string t.kind
+    , Enc.justaField "id" JE.string t.id
+    , Enc.maybeField "etag" JE.string t.etag
+    , Enc.justaField "title" JE.string t.title
+    , Enc.justaField "updated" Enc.date t.updated
+    , Enc.justaField "selfLink" JE.string t.selfLink
+    , Enc.maybeField "parent" JE.string t.parent
+    , Enc.justaField "position" JE.string t.position
+    , Enc.maybeField "notes" JE.string t.notes
+    , Enc.justaField "status" taskStatus t.status
+    , Enc.maybeField "due" Enc.date t.due
+    , Enc.maybeField "completed" Enc.date t.completed
+    , Enc.justaField "deleted" JE.bool t.deleted
+    , Enc.justaField "hidden" JE.bool t.hidden
+    , Enc.maybeField "links" (JE.list << List.map gTaskLink) t.links
+    ]
 
 listGTasks : ListGTasks -> JE.Value
 listGTasks l =
-  JE.object <|
-    [ ("kind", JE.string l.kind)
-    ] ++
-    (case l.etag of
-      Nothing ->
-        []
-      Just e ->
-        [ ("etag", JE.string e) ]
-    ) ++
-    (case l.nextPageToken of
-      Nothing ->
-        []
-      Just t ->
-        [ ("nextPageToken", JE.string t) ]
-    ) ++
-    [ ("items", JE.list (List.map gTask l.items))
+  Enc.object <|
+    [ Enc.justaField "kind" JE.string l.kind
+    , Enc.maybeField "etag" JE.string l.etag
+    , Enc.maybeField "nextPageToken" JE.string l.nextPageToken
+    , Enc.justaField "items" JE.list (List.map gTask l.items)
     ]
 
 gTaskList : GTaskList -> JE.Value
 gTaskList l =
-  JE.object <|
-    [ ("kind", JE.string l.kind)
-    , ("id", JE.string l.id)
-    ] ++
-    (case l.etag of
-      Nothing ->
-        []
-      Just e ->
-        [ ("etag", JE.string e) ]
-    ) ++
-    [ ("title", JE.string l.title)
-    , ("selfLink", JE.string l.selfLink)
-    , ("updated", Encoders.date l.updated)
+  Enc.object <|
+    [ Enc.justaField "kind" JE.string l.kind
+    , Enc.justaField "id" JE.string l.id
+    , Enc.maybeField "etag" JE.string l.etag
+    , Enc.justaField "title" JE.string l.title
+    , Enc.justaField "selfLink" JE.string l.selfLink
+    , Enc.justaField "updated" Enc.date l.updated
     ]
 
 listGTaskLists : ListGTaskLists -> JE.Value
 listGTaskLists l =
-  JE.object <|
-    [ ("kind", JE.string l.kind)
-    ] ++
-    (case l.etag of
-      Nothing ->
-        []
-      Just e ->
-        [ ("etag", JE.string e) ]
-    ) ++
-    (case l.nextPageToken of
-      Nothing ->
-        []
-      Just t ->
-        [ ("nextPageToken", JE.string t) ]
-    ) ++
-    [ ("items", JE.list (List.map gTaskList l.items))
+  Enc.object <|
+    [ Enc.justaField "kind" JE.string l.kind
+    , Enc.maybeField "etag" JE.string l.etag
+    , Enc.maybeField "nextPageToken" JE.string l.nextPageToken
+    , Enc.justaField "items" JE.list (List.map gTaskList l.items)
     ]

@@ -136,6 +136,63 @@ mapListWhere : (a -> Bool) -> (a -> a) -> List a -> List a
 mapListWhere p f xs =
   List.map (\x -> if p x then f x else x) xs
 
+updateAuthPage : AuthPageMsg -> Model -> (Model, Cmd Msg)
+updateAuthPage authMsg model =
+  case authMsg of
+    ReceiveOAuthAccessToken Nothing ->
+      (model, Cmd.none)
+    ReceiveOAuthAccessToken (Just t) ->
+      let
+        api = RestApi.makeClient (bearerToken t)
+      in
+        ( { model | page =
+              Models.HomePage <| initHomePage api
+          }
+        , queryTasklists api
+        )
+
+updateHomePage : HomePageMsg
+    -> Model -> Models.HomePageModel -> (Model, Cmd Msg)
+updateHomePage homeMsg model ({ api, taskLists, currentTaskList } as page ) =
+  case homeMsg of
+    Logout ->
+      ( { model | page = Models.AuthPage }
+      , Cmd.batch
+          [ setOAuthAccessToken Nothing
+          , Nav.newUrl "/"
+          ]
+      )
+    ReceiveQueryTasklists listGTaskLists ->
+      ( { model | page = Models.HomePage
+          { page | taskLists =
+            Just <|
+              List.map Models.fromGTaskList listGTaskLists.items
+          }
+        }
+      , Cmd.none
+      )
+    SelectTaskList zl ->
+      let
+        (model_, cmd) = update (Layout.toggleDrawer Mdl) model
+      in
+        ( { model_ | page = Models.HomePage
+            { page | currentTaskList = Just zl.meta.id } }
+        , Cmd.batch
+            [ cmd , queryTasks api zl ]
+        )
+    ReceiveQueryTasks listId listGTasks ->
+      ( { model | page = Models.HomePage
+          { page | taskLists =
+            Maybe.map
+              (mapListWhere
+                (.meta >> .id >> ((==) listId))
+                (\l -> { l | tasks = Just listGTasks.items }))
+              taskLists
+          }
+        }
+      , Cmd.none
+      )
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -150,61 +207,13 @@ update msg model =
     AuthPageMsg authMsg ->
       case model.page of
         Models.AuthPage ->
-          case authMsg of
-            ReceiveOAuthAccessToken Nothing ->
-              (model, Cmd.none)
-            ReceiveOAuthAccessToken (Just t) ->
-              let
-                api = RestApi.makeClient (bearerToken t)
-              in
-                ( { model | page =
-                      Models.HomePage <| initHomePage api
-                  }
-                , queryTasklists api
-                )
+          updateAuthPage authMsg model
         _ ->
           (model, Cmd.none)
     HomePageMsg homeMsg ->
       case model.page of
-        Models.HomePage ({ api, taskLists, currentTaskList } as page) ->
-          case homeMsg of
-            Logout ->
-              ( { model | page = Models.AuthPage }
-              , Cmd.batch
-                  [ setOAuthAccessToken Nothing
-                  , Nav.newUrl "/"
-                  ]
-              )
-            ReceiveQueryTasklists listGTaskLists ->
-              ( { model | page = Models.HomePage
-                  { page | taskLists =
-                    Just <|
-                      List.map Models.fromGTaskList listGTaskLists.items
-                  }
-                }
-              , Cmd.none
-              )
-            SelectTaskList zl ->
-              let
-                (model_, cmd) = update (Layout.toggleDrawer Mdl) model
-              in
-                ( { model_ | page = Models.HomePage
-                    { page | currentTaskList = Just zl.meta.id } }
-                , Cmd.batch
-                    [ cmd , queryTasks api zl ]
-                )
-            ReceiveQueryTasks listId listGTasks ->
-              ( { model | page = Models.HomePage
-                  { page | taskLists =
-                    Maybe.map
-                      (mapListWhere
-                        (.meta >> .id >> ((==) listId))
-                        (\l -> { l | tasks = Just listGTasks.items }))
-                      taskLists
-                  }
-                }
-              , Cmd.none
-              )
+        Models.HomePage homePage ->
+          updateHomePage homeMsg model homePage
         _ ->
           (model, Cmd.none)
 

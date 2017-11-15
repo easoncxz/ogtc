@@ -11,6 +11,7 @@ import Task
 import Material
 import Material.Layout as Layout
 
+import GoogleTasks.Models as GModels
 import GoogleTasks.Decoders as Marshallers
 import GoogleTasks.RestApi as RestApi
 import OAuth.Models exposing (Token, bearerToken)
@@ -134,6 +135,17 @@ getTaskList api id =
           (HomePageMsg Logout))
     (api.get id)
 
+createNewTaskList : RestApi.Client -> String -> Cmd Msg
+createNewTaskList api title =
+  Http.send
+    (\result -> case result of
+      Ok tl_ ->
+        HomePageMsg (ReceiveTaskList tl_)
+      Err e ->
+        Debug.log "Tasklist creation error?" e
+        |> always NoOp)
+    (api.taskLists.insert { title = title })
+
 mapListWhere : (a -> Bool) -> (a -> a) -> List a -> List a
 mapListWhere p f xs =
   List.map (\x -> if p x then f x else x) xs
@@ -204,8 +216,17 @@ updateHomePage homeMsg model ({ api, taskLists, currentTaskList } as page ) =
       ( { model | page = Models.HomePage
           { page | newTaskListTitle = "" }
         }
-      , Debug.log "Trying to create new task list" page.newTaskListTitle
-        |> always Cmd.none
+      , createNewTaskList page.api page.newTaskListTitle
+      )
+    ReceiveTaskList tl ->
+      ( { model | page = Models.HomePage
+          { page | taskLists =
+            Maybe.map
+              (\zls -> zls ++ [Models.fromGTaskList tl])
+              page.taskLists
+          }
+        }
+      , Cmd.none
       )
 
 update : Msg -> Model -> (Model, Cmd Msg)

@@ -6,7 +6,8 @@ import Material
 
 import Models exposing (ZTaskList)
 import GoogleTasks.Models as GoogleModels exposing
-  ( ListGTasks
+  ( GTaskList
+  , ListGTasks
   , ListGTaskLists
   )
 
@@ -24,6 +25,7 @@ type AuthPageMsg
 type HomePageMsg
   = Logout
   | ReceiveQueryTasklists ListGTaskLists
+  | ReceiveTaskList GTaskList
   | SelectTaskList ZTaskList
   | ReceiveQueryTasks String ListGTasks
   | UpdateNewTaskListTitle String

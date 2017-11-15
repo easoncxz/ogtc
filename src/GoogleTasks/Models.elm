@@ -6,6 +6,7 @@ module GoogleTasks.Models exposing
   , GTaskLink
   , ListGTasks
   , ListGTaskLists
+  , TransientGTaskList
   )
 
 import Time.DateTime as DT exposing (DateTime)
@@ -53,6 +54,9 @@ type alias GTaskList =
   , selfLink : String
   , updated  : DateTime
   }
+
+type alias TransientGTaskList =
+  { title : String }
 
 type alias ListGTaskLists =
   { kind          : String

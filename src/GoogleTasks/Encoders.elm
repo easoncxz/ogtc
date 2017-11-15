@@ -11,6 +11,7 @@ import GoogleTasks.Models exposing
   , GTaskLink
   , ListGTasks
   , ListGTaskLists
+  , TransientGTaskList
   )
 
 taskStatus : TaskStatus -> JE.Value
@@ -68,6 +69,10 @@ gTaskList l =
     , Enc.justaField "selfLink" JE.string l.selfLink
     , Enc.justaField "updated" Enc.date l.updated
     ]
+
+transientGTask : TransientGTaskList -> JE.Value
+transientGTask tl =
+  JE.object [ ("title", JE.string tl.title) ]
 
 listGTaskLists : ListGTaskLists -> JE.Value
 listGTaskLists l =

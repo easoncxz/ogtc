@@ -93,6 +93,21 @@ all = describe "GoogleTasks Decoders"
             lt
         Err e ->
           Expect.fail e
+    , test "when tasklist has no tasks" <| \() ->
+      let
+        real =
+          -- This is really from Google's server:
+          """
+          {
+           "kind": "tasks#tasks",
+           "etag": "\\"foo/bar\\""
+          }
+          """
+      in case JD.decodeString GDecoders.listGTasks real of
+        Ok lt ->
+          Expect.equal (List.length lt.items) 0
+        Err e ->
+          Expect.fail e
     ]
   , describe "GTaskList decoder"
     [ test "one real value" <| \() ->

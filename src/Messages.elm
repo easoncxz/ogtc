@@ -5,7 +5,10 @@ import Navigation
 import Material
 
 import Models exposing (ZTaskList)
-import GoogleTasks.Models as GoogleModels
+import GoogleTasks.Models as GoogleModels exposing
+  ( ListGTasks
+  , ListGTaskLists
+  )
 
 type Msg
   = NoOp
@@ -20,8 +23,8 @@ type AuthPageMsg
 
 type HomePageMsg
   = Logout
-  | ReceiveQueryTasklists GoogleModels.ListGTaskLists
+  | ReceiveQueryTasklists ListGTaskLists
   | SelectTaskList ZTaskList
-  | ReceiveQueryTasks
-      String  -- tasklist id
-      GoogleModels.ListGTasks
+  | ReceiveQueryTasks String ListGTasks
+  | UpdateNewTaskListTitle String
+  | CreateNewTaskList

@@ -15,13 +15,14 @@ type alias HomePageModel =
   { api : RestApi.Client
   , taskLists  : Maybe (List ZTaskList)
   , currentTaskList : Maybe String
+  , newTaskListTitle : String
   }
 
 type alias Model =
   { mdl : Material.Model
-  , oauthClientId : String
-  , page : AppPage
   , location : Nav.Location
+  , page : AppPage
+  , oauthClientId : String
   }
 
 type alias ZTaskList =

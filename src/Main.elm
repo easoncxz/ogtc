@@ -69,6 +69,7 @@ init loc =
               { api = api
               , taskLists = Nothing
               , currentTaskList = Nothing
+              , newTaskListTitle = ""
               }
             , Cmd.batch
               [ setOAuthAccessToken (Just t)
@@ -93,6 +94,7 @@ initHomePage api =
   { api = api
   , taskLists = Nothing
   , currentTaskList = Nothing
+  , newTaskListTitle = ""
   }
 
 queryTasklists : RestApi.Client -> Cmd Msg
@@ -191,6 +193,19 @@ updateHomePage homeMsg model ({ api, taskLists, currentTaskList } as page ) =
           }
         }
       , Cmd.none
+      )
+    UpdateNewTaskListTitle t ->
+      ( { model | page = Models.HomePage
+          { page | newTaskListTitle = t }
+        }
+      , Cmd.none
+      )
+    CreateNewTaskList ->
+      ( { model | page = Models.HomePage
+          { page | newTaskListTitle = "" }
+        }
+      , Debug.log "Trying to create new task list" page.newTaskListTitle
+        |> always Cmd.none
       )
 
 update : Msg -> Model -> (Model, Cmd Msg)

@@ -28,18 +28,21 @@ view model =
     Messages.Mdl
     model.mdl
     [ Layout.fixedHeader
-    , case model.page of
-        Models.AuthPage ->
-          Options.nop
-        Models.HomePage _ ->
-          Layout.fixedDrawer
+    , fixedDrawerByPage model.page
     ]
     { header = viewHeader model
     , drawer = viewDrawer model
     , tabs = ([], [])
     , main = viewMain model
     }
-  |> Scheme.top   -- can be replaced with proper <link> elements
+
+fixedDrawerByPage : Models.AppPage -> Layout.Property Msg
+fixedDrawerByPage page =
+  case page of
+    Models.AuthPage ->
+      Options.nop
+    Models.HomePage _ ->
+      Layout.fixedDrawer
 
 viewHeader : Model -> List (H.Html Msg)
 viewHeader model =
@@ -76,7 +79,36 @@ viewDrawer model =
               [ Layout.link [] [ H.text "Loading tasklists..." ] ]
             Just lists ->
               List.map viewTasklistTitle lists
-  ]
+  , Layout.spacer
+  ] ++
+  (case model.page of
+    Models.HomePage homePage ->
+      [ viewNewTaskListField model.mdl homePage ]
+    Models.AuthPage ->
+      []
+  )
+
+viewNewTaskListField : Material.Model -> Models.HomePageModel -> H.Html Msg
+viewNewTaskListField mdl homePage =
+  Options.div boxed
+    [ Textfield.render Messages.Mdl [626525] mdl
+      [ Textfield.label "New Tasklist"
+      , Textfield.floatingLabel
+      , Textfield.text_
+      , Textfield.value homePage.newTaskListTitle
+      , Options.onInput
+        (Messages.HomePageMsg << Messages.UpdateNewTaskListTitle)
+      , Options.css "width" "100%"
+      ]
+      []
+    , Button.render Messages.Mdl [7715536] mdl
+      [ Button.flat
+      , Button.type_ "submit"
+      , Options.onClick
+        (Messages.HomePageMsg Messages.CreateNewTaskList)
+      ]
+      [ H.text "Go" ]
+    ]
 
 boxed : List (Options.Style m)
 boxed =
@@ -140,11 +172,13 @@ viewLoginPage model =
     ]
 
 viewHomePage : Model -> Models.HomePageModel -> H.Html Msg
-viewHomePage model { taskLists, currentTaskList } =
+viewHomePage model ({ taskLists, currentTaskList } as page) =
   case Models.findZTaskListById currentTaskList taskLists of
     Nothing ->
       Options.div [ Options.many boxed ]
-        [ H.h1 [] [ H.text "No tasklist selected" ] ]
+        [ H.h1 [] [ H.text "No tasklist selected" ]
+        , H.code [] [ H.text page.newTaskListTitle ]
+        ]
     Just tl ->
       Options.div [ Options.many boxed ]
         [ H.h1 [] [ H.text tl.meta.title ]
@@ -157,7 +191,6 @@ viewHomePage model { taskLists, currentTaskList } =
           ]
         , viewOneTaskList (Just tl)
         ]
-
 
 viewOneTaskList : Maybe ZTaskList -> H.Html Msg
 viewOneTaskList taskListMaybe =

@@ -68,7 +68,7 @@ listGTasks =
       |> JD.andThen (must ((==) "tasks#tasks")))
     |> maybe "etag" string
     |> maybe "nextPageToken" string
-    |> required "items" (JD.list gTask)
+    |> optional "items" (JD.list gTask) []
 
 gTaskList : Decoder GTaskList
 gTaskList =

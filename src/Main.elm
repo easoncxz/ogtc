@@ -112,6 +112,18 @@ queryTasks api zTaskList =
           in HomePageMsg Logout)
     (api.tasks.list zTaskList.meta.id)
 
+getTaskList : RestApi.TaskListsApi -> String -> Cmd Msg
+getTaskList api id =
+  Http.send
+    (\result -> case result of
+      Ok gTaskList ->
+        HomePageMsg <| GotTaskList id gTaskList
+      Err e ->
+        Debug.log
+          (toString e)
+          (HomePageMsg Logout))
+    (api.get id)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -182,6 +194,7 @@ update msg model =
                 , Cmd.batch
                     [ cmd
                     , queryTasks api zl
+                    , getTaskList api.taskLists zl.meta.id
                     ]
                 )
             ReceiveQueryTasks listId listGTasks ->
@@ -200,6 +213,15 @@ update msg model =
                           )
                           taskLists
                     , currentTaskList = currentTaskList
+                    }
+                }
+              , Cmd.none
+              )
+            GotTaskList id gTaskList ->
+              ( { model | page = Models.HomePage
+                    { api = api
+                    , taskLists = taskLists
+                    , currentTaskList = Just gTaskList.id
                     }
                 }
               , Cmd.none

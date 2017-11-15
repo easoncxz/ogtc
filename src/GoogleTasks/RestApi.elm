@@ -6,7 +6,7 @@ import Http exposing (Request)
 import OAuth.Models exposing (Token)
 import OAuth.Http as OHttp
 
-import GoogleTasks.Decoders as GDecoders
+import GoogleTasks.Decoders as GD
 import GoogleTasks.Models exposing
   ( GTask
   , GTaskList
@@ -17,7 +17,7 @@ import GoogleTasks.Models exposing
 
 type alias TaskListsApi =
   { list : Request ListGTaskLists
-  -- , more
+  , get : String -> Request GTaskList
   }
 
 type alias TasksApi =
@@ -38,13 +38,15 @@ makeClient token =
 
 makeTaskListsApi : Token -> TaskListsApi
 makeTaskListsApi token =
-  { list =
-      OHttp.get
-        token
-        "https://www.googleapis.com/tasks/v1/users/@me/lists"
-        GDecoders.listGTaskLists
-  -- , more
-  }
+  let
+    url relative =
+      "https://www.googleapis.com/tasks/v1/users/@me/lists" ++ relative
+  in
+    { list =
+        OHttp.get token (url "") GD.listGTaskLists
+    , get = \id ->
+        OHttp.get token (url ("/" ++ id)) GD.gTaskList
+    }
 
 makeTasksApi : Token -> TasksApi
 makeTasksApi token =
@@ -54,6 +56,6 @@ makeTasksApi token =
         ("https://www.googleapis.com/tasks/v1/lists/"
           ++ {- Http.encodeUri -} taskListId
           ++ "/tasks")
-        GDecoders.listGTasks
+        GD.listGTasks
   -- , more
   }
